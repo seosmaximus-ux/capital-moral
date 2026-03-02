@@ -3,57 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral - Fix Total</title>
+  <title>Capital Moral - Fix Final</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; --pending: #ff4444; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
-    .container { max-width: 480px; margin: auto; padding: 20px; position: relative; z-index: 1; }
+    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; }
+    .container { max-width: 450px; margin: auto; padding: 20px; }
+    .card { background: var(--card); padding: 25px; margin: 15px 0; border-radius: 20px; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     
-    /* Notificaciones - CORREGIDO PARA NO BLOQUEAR */
-    #notification-container { 
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
-      z-index: 9999; width: 90%; max-width: 400px; 
-      pointer-events: none; /* Esto permite hacer click a través de la capa */
-    }
-    .toast { 
-      background: #222; color: white; padding: 15px; border-radius: 12px; 
-      border-left: 5px solid var(--primary); margin-bottom: 10px; 
-      box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-size: 13px; text-align: center; 
-      pointer-events: auto; /* Solo el mensaje recibe clics si es necesario */
-    }
+    /* Notificaciones */
+    #notification-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; pointer-events: none; }
+    .toast { background: #333; color: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 8px; pointer-events: auto; font-size: 13px; text-align: center; }
 
-    .card { background: var(--card); padding: 20px; margin: 15px 0; border-radius: 20px; border: 1px solid #222; position: relative; }
+    /* Botones y Inputs */
+    .main-btn { width: 100%; padding: 18px; background: var(--primary); border: none; border-radius: 15px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; transition: 0.2s; }
+    .main-btn:active { transform: scale(0.95); opacity: 0.8; }
+    .main-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
     
-    /* Botones - ASEGURANDO CLICS */
-    .main-btn { 
-      width: 100%; padding: 16px; background: var(--primary); border: none; 
-      border-radius: 12px; font-weight: 800; cursor: pointer; color: #000; 
-      text-transform: uppercase; display: block; position: relative; z-index: 10;
-    }
-    .main-btn:active { transform: scale(0.98); }
-
-    .nav-bar { 
-      position: fixed; bottom: 0; left: 0; right: 0; 
-      background: rgba(15,15,15,0.95); backdrop-filter: blur(10px); 
-      display: flex; justify-content: space-around; padding: 15px; 
-      border-top: 1px solid #222; z-index: 100; 
-    }
-
-    /* Modal - CORREGIDO */
-    #editModal { 
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(0,0,0,0.9); z-index: 5000; 
-      display: flex; align-items: center; justify-content: center;
-    }
+    input, textarea { width: 100%; padding: 15px; border-radius: 12px; background: #1a1a1a; border: 1px solid #333; color: white; margin-bottom: 12px; box-sizing: border-box; font-size: 16px; }
     
-    input, textarea { width: 100%; padding: 14px; border-radius: 12px; background: #1a1a1a; border: 1px solid #333; color: white; margin-bottom: 10px; box-sizing: border-box; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,15,0.98); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 1000; }
+    .nav-btn { background: none; border: none; color: #666; font-weight: bold; cursor: pointer; font-size: 11px; }
+    .nav-btn.active { color: var(--primary); }
+    
     .img-wall { width: 100%; border-radius: 15px; margin: 10px 0; aspect-ratio: 1/1; object-fit: cover; background: #222; }
+    .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; border: 1px solid; }
     .hidden { display: none !important; }
-    
-    .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; border: 1px solid; }
-    .status-pending { color: var(--pending); border-color: var(--pending); }
-    .status-verified { color: var(--primary); border-color: var(--primary); }
   </style>
 </head>
 <body>
@@ -61,14 +36,14 @@
 <div id="notification-container"></div>
 
 <div class="container">
-  <h1 style="text-align: center;">Capital <span style="color:var(--primary)">Moral</span></h1>
+  <h1 style="text-align: center; margin-bottom: 30px;">Capital <span style="color:var(--primary)">Moral</span></h1>
 
   <div id="authSection" class="card">
-    <h3 style="text-align:center">Bienvenido</h3>
-    <input type="email" id="email" placeholder="Correo">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button class="main-btn" onclick="signIn()">Entrar a la red</button>
-    <button style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;" onclick="signUp()">Crear cuenta nueva</button>
+    <h3 style="text-align: center; margin-top: 0;">Entrar</h3>
+    <input type="email" id="email" placeholder="Tu correo">
+    <input type="password" id="password" placeholder="Tu contraseña">
+    <button class="main-btn" id="loginBtn" onclick="signIn()">Iniciar Sesión</button>
+    <button style="background:none; border:none; color:#666; width:100%; margin-top:20px; cursor:pointer;" onclick="signUp()">¿No tienes cuenta? Regístrate</button>
   </div>
 
   <div id="tab-perfil" class="tab-content hidden">
@@ -77,33 +52,30 @@
       <h2 id="puntosTotales" style="font-size: 50px; margin: 5px 0;">0</h2>
       <p id="valorEstimado" style="opacity: 0.7; font-size: 13px;">Impacto: $0.00</p>
     </div>
-
     <div class="card">
-      <h4 style="margin-top:0;">Nueva Acción Social</h4>
+      <h4 style="margin-top:0;">Nueva Acción</h4>
       <input type="text" id="nombreAyudado" placeholder="¿A quién ayudaste?">
-      <textarea id="comentarioAccion" placeholder="¿Qué hiciste?"></textarea>
+      <textarea id="comentarioAccion" placeholder="Describe tu acción..."></textarea>
       <input type="file" id="fotoInput" accept="image/*">
-      <button class="main-btn" id="btnRegistrar" onclick="registrarAccion()">Publicar prueba</button>
+      <button class="main-btn" id="btnRegistrar" onclick="registrarAccion()">Publicar</button>
     </div>
-
     <div class="card">
       <h4>Mis publicaciones</h4>
       <div id="miHistorial">Cargando...</div>
     </div>
-    <button onclick="signOut()" style="background:none; border:none; color:#444; width:100%; padding:20px; cursor:pointer;">Cerrar Sesión</button>
+    <button onclick="signOut()" style="background:none; border:none; color:#444; width:100%; padding:20px;">Cerrar Sesión</button>
   </div>
 
   <div id="tab-comunidad" class="tab-content hidden">
-    <h3 style="text-align: center;">Muro de Transparencia</h3>
+    <h3 style="text-align: center;">Muro Global</h3>
     <div id="feedComunidad"></div>
   </div>
 
   <div id="tab-donar" class="tab-content hidden">
     <div class="card" style="text-align: center; border-color: var(--gold);">
-      <small style="color:var(--gold)">FONDO TOTAL</small>
       <h1 id="fondoGlobal">$0.00</h1>
       <input type="number" id="montoDonar" placeholder="Monto ($)">
-      <button class="main-btn" style="background: var(--gold); color:black" onclick="realizarDonacion()">Donar al fondo</button>
+      <button class="main-btn" style="background: var(--gold); color:black" onclick="realizarDonacion()">CONTRIBUIR</button>
     </div>
   </div>
 </div>
@@ -114,32 +86,59 @@
   <button class="nav-btn" onclick="showTab('donar')">DONAR</button>
 </nav>
 
-<div id="editModal" class="hidden">
-  <div class="card" style="width: 90%; max-width: 400px; border: 2px solid var(--primary);">
-    <h3>Editar publicación</h3>
-    <input type="hidden" id="editId">
-    <input type="text" id="editNombre">
-    <textarea id="editComentario" rows="4"></textarea>
-    <button class="main-btn" onclick="guardarEdicion()">Guardar cambios</button>
-    <button onclick="document.getElementById('editModal').classList.add('hidden')" style="background:none; border:none; color:#888; width:100%; margin-top:10px; cursor:pointer;">Cancelar</button>
-  </div>
-</div>
-
 <script>
+// CONEXIÓN DIRECTA
 const _supabase = supabase.createClient("https://dmlajgddeyfvwahswlvh.supabase.co", "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX");
 
 function notify(msg) {
   const c = document.getElementById('notification-container');
   const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
-  c.appendChild(t); setTimeout(() => t.remove(), 3000);
+  c.appendChild(t); setTimeout(() => t.remove(), 3500);
 }
 
-function getRango(pts) {
-  if (pts >= 500) return '<span class="status-tag" style="background:var(--gold); color:black">Leyenda Oro</span>';
-  if (pts >= 200) return '<span class="status-tag" style="background:#c0c0c0; color:black">Héroe Plata</span>';
-  return '<span class="status-tag" style="background:#cd7f32; color:white">Colaborador Bronce</span>';
+// FUNCIONES DE ACCESO
+async function signIn() {
+  const btn = document.getElementById("loginBtn");
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if(!email || !password) return notify("Escribe email y contraseña");
+
+  btn.innerText = "CONECTANDO...";
+  btn.disabled = true;
+
+  try {
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      notify("Error: " + error.message);
+      btn.innerText = "Iniciar Sesión";
+      btn.disabled = false;
+    } else {
+      notify("¡Bienvenido de nuevo!");
+      verificarSesion();
+    }
+  } catch (e) {
+    notify("Error de red inesperado");
+    btn.innerText = "Iniciar Sesión";
+    btn.disabled = false;
+  }
 }
 
+async function signUp() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  if(!email || password.length < 6) return notify("Email válido y clave de 6+ caracteres");
+
+  const { data, error } = await _supabase.auth.signUp({ email, password });
+  if (error) return notify(error.message);
+  
+  if (data.user) {
+    await _supabase.from('usuarios').insert([{ id: data.user.id, email, capital_total: 0 }]);
+    notify("¡Cuenta creada! Ahora pulsa Entrar.");
+  }
+}
+
+// LOGICA DE INTERFAZ
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -150,25 +149,53 @@ function showTab(name) {
   if(name === 'donar') cargarFondo();
 }
 
+async function verificarSesion() {
+  const { data: { user } } = await _supabase.auth.getUser();
+  if (user) {
+    document.getElementById("authSection").classList.add("hidden");
+    document.getElementById("navBar").classList.remove("hidden");
+    document.getElementById("tab-perfil").classList.remove("hidden");
+    actualizarPerfil();
+  }
+}
+
+async function actualizarPerfil() {
+  const { data: { user } } = await _supabase.auth.getUser();
+  const { data: u } = await _supabase.from('usuarios').select('*').eq('id', user.id).single();
+  const { data: f } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
+  
+  document.getElementById("puntosTotales").innerText = u?.capital_total || 0;
+  document.getElementById("valorEstimado").innerText = "Impacto: $" + ((u?.capital_total || 0) * 0.1).toFixed(2);
+  document.getElementById("fondoGlobal").innerText = "$" + (f?.monto_total || 0);
+
+  const { data: hist } = await _supabase.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false });
+  const cont = document.getElementById("miHistorial");
+  cont.innerHTML = hist?.length ? "" : "No hay publicaciones.";
+  hist?.forEach(i => {
+    cont.innerHTML += `<div style="padding:10px; border-bottom:1px solid #222;">${i.nombre_ayudado} (+${i.puntos} pts)</div>`;
+  });
+}
+
 async function cargarMuro() {
   const feed = document.getElementById("feedComunidad");
-  feed.innerHTML = "<p style='text-align:center'>Cargando...</p>";
-  const { data: { user } } = await _supabase.auth.getUser();
+  feed.innerHTML = "Cargando...";
   const { data: acciones } = await _supabase.from('acciones').select('*').order('created_at', { ascending: false });
   const { data: usuarios } = await _supabase.from('usuarios').select('*');
-  const { data: vals } = await _supabase.from('validaciones').select('*');
-
+  
   feed.innerHTML = "";
   acciones?.forEach(act => {
     const autor = usuarios?.find(u => u.id === act.usuario_id);
-    const email = autor ? autor.email.split('@')[0] : "Hero";
-    const votos = vals?.filter(v => v.accion_id === act.id) || [];
-    const num = votos.length;
-    const ya = user ? votos.some(v => v.usuario_id === user.id) : false;
-    const esMio = user && act.usuario_id === user.id;
+    feed.innerHTML += `<div class="card">
+      <strong>@${autor?.email.split('@')[0]}</strong>
+      <p>${act.nombre_ayudado}: ${act.comentario}</p>
+      <img src="${act.foto_url}" class="img-wall">
+    </div>`;
+  });
+}
 
-    feed.innerHTML += `
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <div><strong>@${email}</strong> ${getRango(autor?.capital_total || 0)}</div>
-          <span class="status-tag ${num >= 3 ? 'status-verified' : 'status-pending'}">${num >= 3 ? 'VERIFICADO' : num+'/3 Votos'}</span>
+async function signOut() { await _supabase.auth.signOut(); location.reload(); }
+
+verificarSesion();
+</script>
+</body>
+</html>

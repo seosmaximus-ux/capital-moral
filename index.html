@@ -3,30 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral - Fix Maestro</title>
+  <title>Capital Moral - Edición Forzada</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; --silver: #c0c0c0; --bronze: #cd7f32; }
+    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: rgba(255, 204, 0, 0.2); --silver: rgba(192, 192, 192, 0.2); --bronze: rgba(205, 127, 50, 0.2); }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
     .container { max-width: 450px; margin: auto; padding: 20px; }
     .card { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 24px; border: 1px solid #222; }
     
-    /* MODAL DE EDICIÓN FLOTANTE */
-    .modal-overlay { 
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(0,0,0,0.9); z-index: 10000; 
-      display: flex; align-items: center; justify-content: center; 
-    }
-    .modal-box { background: #1a1a1a; width: 90%; max-width: 380px; padding: 25px; border-radius: 24px; border: 2px solid var(--primary); }
+    /* MODAL OVERLAY */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; display: flex; align-items: center; justify-content: center; }
+    .modal-box { background: #1a1a1a; width: 85%; padding: 25px; border-radius: 24px; border: 2px solid var(--primary); }
 
     .main-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 16px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; }
-    .btn-edit { background: #222; color: var(--primary); border: 1px solid var(--primary); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 11px; }
+    .btn-edit { background: #333; color: var(--primary); border: 1px solid var(--primary); padding: 10px 15px; border-radius: 12px; cursor: pointer !important; font-weight: bold; font-size: 12px; display: inline-block; }
 
     input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px; box-sizing: border-box; }
     
-    /* MEDALLAS */
-    .medal { font-size: 18px; margin-right: 10px; }
-    .top-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
+    /* RANKING PREMIUM */
+    .top-item { display: flex; align-items: center; padding: 15px; border-radius: 15px; margin-bottom: 8px; border: 1px solid #222; }
+    .rank-0 { background: var(--gold); border-color: #ffcc00; } /* Oro */
+    .rank-1 { background: var(--silver); border-color: #c0c0c0; } /* Plata */
+    .rank-2 { background: var(--bronze); border-color: #cd7f32; } /* Bronce */
+    .medal { font-size: 20px; margin-right: 12px; }
 
     .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0a; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 500; }
     .nav-btn { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; }
@@ -37,7 +36,9 @@
 </head>
 <body>
 
-<div id="editor-container"></div> <div class="container">
+<div id="editor-container"></div>
+
+<div class="container">
   <h1 style="text-align: center; font-weight: 900;">CAPITAL <span style="color:var(--primary)">MORAL</span></h1>
 
   <div id="authSection" class="card">
@@ -54,12 +55,12 @@
     <div class="card">
       <h4>Nueva Acción</h4>
       <input type="text" id="nombreAyudado" placeholder="¿A quién ayudaste?">
-      <textarea id="comentarioAccion" placeholder="Describe tu acción..."></textarea>
+      <textarea id="comentarioAccion" placeholder="Descripción..."></textarea>
       <input type="file" id="fotoInput" accept="image/*">
       <button class="main-btn" onclick="registrarAccion()">Publicar</button>
     </div>
     <div id="miHistorial"></div>
-    <button onclick="signOut()" style="width:100%; background:none; border:none; color:#444; margin-top:20px;">Cerrar Sesión</button>
+    <button onclick="signOut()" style="width:100%; background:none; border:none; color:#444; margin-top:20px; cursor:pointer;">Cerrar Sesión</button>
   </div>
 
   <div id="tab-comunidad" class="tab-content hidden">
@@ -67,14 +68,14 @@
   </div>
 
   <div id="tab-donar" class="tab-content hidden">
-    <div class="card" style="text-align: center; border-color: var(--gold);">
-      <h4 style="color:var(--gold)">FONDO COMUNITARIO</h4>
+    <div class="card" style="text-align: center; border: 2px solid #ffcc00;">
+      <h4 style="color:#ffcc00">FONDO COMUNITARIO</h4>
       <h1 id="fondoGlobal" style="font-size: 40px; margin: 10px 0;">$0.00</h1>
       <input type="number" id="montoDonar" placeholder="Monto $">
-      <button class="main-btn" style="background: var(--gold);" onclick="realizarDonacion()">CONTRIBUIR</button>
+      <button class="main-btn" style="background: #ffcc00;" onclick="realizarDonacion()">CONTRIBUIR</button>
     </div>
     <div class="card">
-      <h4 style="margin-top:0">🏆 Ranking de Líderes</h4>
+      <h4 style="margin-top:0">🏆 Muro de Honor</h4>
       <div id="topDonantes"></div>
     </div>
   </div>
@@ -89,40 +90,35 @@
 <script>
 const _supabase = supabase.createClient("https://dmlajgddeyfvwahswlvh.supabase.co", "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX");
 
-// --- FUNCIÓN DE EDICIÓN "MAESTRA" (CREA EL EDITOR AL VUELO) ---
-function abrirEditor(id, actualNombre, actualComentario) {
-  const container = document.getElementById('editor-container');
-  // Inyectamos el HTML del modal directamente
-  container.innerHTML = `
-    <div class="modal-overlay" id="tempModal">
+// --- FUNCIÓN DE EDICIÓN TOTALMENTE RENOMBRADA ---
+function ejecutarEdicion(id, nom, com) {
+  console.log("Intentando editar ID:", id); // Esto aparecerá en la consola del navegador
+  const cont = document.getElementById('editor-container');
+  cont.innerHTML = `
+    <div class="modal-overlay">
       <div class="modal-box">
-        <h3 style="color:var(--primary); margin-top:0">Editar Publicación</h3>
-        <input type="text" id="newNombre" value="${actualNombre}">
-        <textarea id="newComentario" rows="4">${actualComentario}</textarea>
-        <button class="main-btn" onclick="confirmarEdicion(${id})">GUARDAR CAMBIOS</button>
-        <button onclick="cerrarEditor()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Cancelar</button>
+        <h3 style="color:var(--primary); margin-top:0">Actualizar Datos</h3>
+        <input type="text" id="edit_n" value="${nom}">
+        <textarea id="edit_c" rows="4">${com}</textarea>
+        <button class="main-btn" onclick="procesoGuardar(${id})">GUARDAR CAMBIOS</button>
+        <button onclick="document.getElementById('editor-container').innerHTML=''" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Cerrar</button>
       </div>
     </div>
   `;
 }
 
-function cerrarEditor() {
-  document.getElementById('editor-container').innerHTML = '';
-}
-
-async function confirmarEdicion(id) {
-  const n = document.getElementById('newNombre').value;
-  const c = document.getElementById('newComentario').value;
+async function procesoGuardar(id) {
+  const n = document.getElementById('edit_n').value;
+  const c = document.getElementById('edit_c').value;
   const { error } = await _supabase.from('acciones').update({ nombre_ayudado: n, comentario: c }).eq('id', id);
   if(!error) {
-    alert("¡Actualizado!");
-    cerrarEditor();
+    document.getElementById('editor-container').innerHTML = '';
     actualizarPerfil();
     cargarMuro();
   }
 }
 
-// --- LOGICA DE NAVEGACIÓN Y DATOS ---
+// --- LOGICA DE NAVEGACIÓN ---
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -148,7 +144,7 @@ async function cargarMuro() {
         <p><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
         <img src="${act.foto_url}" class="img-wall">
         <div style="display:flex; gap:10px; margin-top:15px;">
-          ${(esMio && n < 3) ? `<button class="btn-edit" onclick="abrirEditor(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
+          ${(esMio && n < 3) ? `<button class="btn-edit" onclick="ejecutarEdicion(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
           <button class="main-btn" style="padding:10px; font-size:11px;" onclick="validar(${act.id})" ${(esMio || n>=3) ? 'disabled' : ''}>VALIDAR (${n}/3)</button>
         </div>
       </div>`;
@@ -163,14 +159,14 @@ async function actualizarPerfil() {
   const { data: hist } = await _supabase.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false });
   const { data: allVals } = await _supabase.from('validaciones').select('*');
   const cont = document.getElementById("miHistorial");
-  cont.innerHTML = "<h4>Mis Acciones</h4>";
+  cont.innerHTML = "<h4>Mi Historial</h4>";
   
   hist?.forEach(i => {
     const n = allVals?.filter(v => v.accion_id === i.id).length || 0;
     cont.innerHTML += `
       <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
         <span>${i.nombre_ayudado}</span>
-        ${n < 3 ? `<button class="btn-edit" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : '✅'}
+        ${n < 3 ? `<button class="btn-edit" onclick="ejecutarEdicion(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : '✅'}
       </div>`;
   });
 }
@@ -181,7 +177,12 @@ async function cargarRanking() {
   cont.innerHTML = "";
   const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
   data?.forEach((u, i) => {
-    cont.innerHTML += `<div class="top-item"><span class="medal">${medals[i]}</span> <span>${u.email.split('@')[0]}</span> <b style="margin-left:auto">${u.capital_total}</b></div>`;
+    cont.innerHTML += `
+      <div class="top-item rank-${i}">
+        <span class="medal">${medals[i]}</span> 
+        <span>${u.email.split('@')[0]}</span> 
+        <b style="margin-left:auto">${u.capital_total} pts</b>
+      </div>`;
   });
 }
 

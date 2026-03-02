@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capital Moral - App de Impacto</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { 
+      --primary: #00ff88; 
+      --bg: #0a0a0a; 
+      --card: #161616; 
+      --text: #f0f0f0; 
+      --gold: #ffcc00; 
+      --pending: #ff4444; 
+    }
+    
+    body { 
+      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+      background: var(--bg); 
+      color: var(--text); 
+      margin: 0; 
+      padding-bottom: 100px; 
+    }
+
+    .container { max-width: 480px; margin: auto; padding: 20px; }
+    
+    .card { 
+      background: var(--card); 
+      padding: 20px; 
+      margin: 15px 0; 
+      border-radius: 20px; 
+      border: 1px solid #222; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+    }
+
+    /* Estados de Validación */
+    .status-tag {
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      border: 1px solid;
+    }
+    .status-pending { color: var(--pending); border-color: var(--pending); background: rgba(255,68,68,0.05); }
+    .status-verified { color: var(--primary); border-color: var(--primary); background: rgba(0,255,136,0.05); }
+
+    /* Inputs y Botones */
+    input, select, textarea { 
+      width: 100%; padding: 14px; border-radius: 12px; 
+      background: #1a1a1a; border: 1px solid #333; 
+      color: white; margin-bottom: 12px; box-sizing: border-box; 
+    }
+
+    .main-btn { 
+      width: 100%; padding: 16px; background: var(--primary); 
+      border: none; border-radius: 12px; font-weight: 800; 
+      cursor: pointer; color: #000; text-transform: uppercase; 
+    }
+
+    .btn-validar {
+      background: #222; border: 1px solid #444; color: white;
+      padding: 10px 20px; border-radius: 12px; cursor: pointer;
+      font-weight: bold; transition: 0.3s;
+    }
+    .btn-validar.active { background: var(--primary); color: #000; border-color: var(--primary); }
+    .btn-validar:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Navegación */
+    .nav-bar { 
+      position: fixed; bottom: 0; left: 0; right: 0; 
+      background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px); 
+      display: flex; justify-content: space-around; 
+      padding: 15px; border-top: 1px solid #222; z-index: 1000;
+    }
+    .nav-btn { background: none; border: none; color: #666; cursor: pointer; font-size: 11px; font-weight: bold; }
+    .nav-btn.active { color: var(--primary); }
+
+    /* Imagenes */
+    .img-wall { width: 100%; border-radius: 15px; margin: 12px 0; object-fit: cover; aspect-ratio: 1/1; background: #222; }
+    .history-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #222; }
+    .img-hist { width: 50px; height: 50px; border-radius: 10px

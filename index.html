@@ -3,92 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral - Estabilidad Total</title>
+  <title>Capital Moral - Fix Maestro</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; --pending: #ff4444; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; overflow-x: hidden; }
-    .container { max-width: 450px; margin: auto; padding: 20px; position: relative; z-index: 10; }
+    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; --silver: #c0c0c0; --bronze: #cd7f32; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
+    .container { max-width: 450px; margin: auto; padding: 20px; }
+    .card { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 24px; border: 1px solid #222; }
     
-    /* MODAL - PRIORIDAD MÁXIMA */
-    #editModal { 
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      background: rgba(0,0,0,0.95); z-index: 99999; 
+    /* MODAL DE EDICIÓN FLOTANTE */
+    .modal-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.9); z-index: 10000; 
       display: flex; align-items: center; justify-content: center; 
     }
-    .modal-content { background: var(--card); width: 90%; max-width: 380px; padding: 25px; border-radius: 24px; border: 2px solid var(--primary); box-shadow: 0 0 30px rgba(0,255,136,0.2); }
+    .modal-box { background: #1a1a1a; width: 90%; max-width: 380px; padding: 25px; border-radius: 24px; border: 2px solid var(--primary); }
 
-    .card { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 24px; border: 1px solid #222; position: relative; }
-    
-    /* BOTONES */
     .main-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 16px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; }
-    .edit-btn-sm { 
-      background: #111; color: var(--primary); border: 1px solid var(--primary); 
-      padding: 8px 15px; border-radius: 10px; font-size: 11px; cursor: pointer !important; 
-      font-weight: bold; position: relative; z-index: 50; pointer-events: auto !important;
-    }
+    .btn-edit { background: #222; color: var(--primary); border: 1px solid var(--primary); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 11px; }
 
-    input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #1a1a1a; border: 1px solid #333; color: white; margin-bottom: 12px; box-sizing: border-box; }
+    input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px; box-sizing: border-box; }
     
-    .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; border: 1px solid; }
-    .rango-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 800; }
+    /* MEDALLAS */
+    .medal { font-size: 18px; margin-right: 10px; }
+    .top-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
 
-    /* DONAR & TOP */
-    .donate-card { background: linear-gradient(135deg, #1e1e1e 0%, #111 100%); border: 1px solid #333; }
-    .gold-text { background: linear-gradient(90deg, #bf953f, #fcf6ba, #aa771c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
-    .top-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; font-size: 13px; }
-
-    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.98); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 1000; }
-    .nav-btn { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; font-size: 11px; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0a; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 500; }
+    .nav-btn { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; }
     .nav-btn.active { color: var(--primary); }
-    .img-wall { width: 100%; border-radius: 18px; margin: 12px 0; aspect-ratio: 1/1; object-fit: cover; }
     .hidden { display: none !important; }
-    #notification-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100000; width: 90%; pointer-events: none; }
-    .toast { background: #222; color: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 8px; text-align: center; }
+    .img-wall { width: 100%; border-radius: 18px; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-<div id="notification-container"></div>
-
-<div id="editModal" class="hidden">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color: var(--primary);">Actualizar Acción</h3>
-    <input type="hidden" id="editId">
-    <label style="font-size: 11px; opacity: 0.6;">Beneficiario:</label>
-    <input type="text" id="editNombre">
-    <label style="font-size: 11px; opacity: 0.6;">Detalles:</label>
-    <textarea id="editComentario" rows="4"></textarea>
-    <button class="main-btn" onclick="guardarEdicion()">Confirmar Cambios</button>
-    <button onclick="cerrarModal()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Cancelar</button>
-  </div>
-</div>
-
-<div class="container">
+<div id="editor-container"></div> <div class="container">
   <h1 style="text-align: center; font-weight: 900;">CAPITAL <span style="color:var(--primary)">MORAL</span></h1>
 
   <div id="authSection" class="card">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Contraseña">
     <button class="main-btn" onclick="signIn()">Entrar</button>
-    <button onclick="signUp()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Registrarse</button>
   </div>
 
   <div id="tab-perfil" class="tab-content hidden">
     <div class="card" style="text-align: center;">
-      <div id="userRango"></div>
-      <h2 id="puntosTotales" style="font-size: 55px; margin: 0;">0</h2>
-      <p id="valorEstimado" style="opacity: 0.5;">Impacto: $0.00</p>
+      <h2 id="puntosTotales" style="font-size: 50px; margin: 0;">0</h2>
+      <p style="opacity:0.5">Mis Puntos Morales</p>
     </div>
     <div class="card">
-      <h4 style="margin:0 0 15px 0;">Nueva Acción</h4>
+      <h4>Nueva Acción</h4>
       <input type="text" id="nombreAyudado" placeholder="¿A quién ayudaste?">
-      <textarea id="comentarioAccion" placeholder="Descripción..."></textarea>
+      <textarea id="comentarioAccion" placeholder="Describe tu acción..."></textarea>
       <input type="file" id="fotoInput" accept="image/*">
       <button class="main-btn" onclick="registrarAccion()">Publicar</button>
     </div>
     <div id="miHistorial"></div>
-    <button onclick="signOut()" style="background:none; border:none; color:#444; width:100%; padding:20px;">Cerrar sesión</button>
+    <button onclick="signOut()" style="width:100%; background:none; border:none; color:#444; margin-top:20px;">Cerrar Sesión</button>
   </div>
 
   <div id="tab-comunidad" class="tab-content hidden">
@@ -96,15 +67,15 @@
   </div>
 
   <div id="tab-donar" class="tab-content hidden">
-    <div class="card donate-card" style="text-align: center;">
-      <h4 class="gold-text">RESERVA GLOBAL</h4>
-      <h1 id="fondoGlobal" style="font-size: 40px; margin:10px 0;">$0.00</h1>
+    <div class="card" style="text-align: center; border-color: var(--gold);">
+      <h4 style="color:var(--gold)">FONDO COMUNITARIO</h4>
+      <h1 id="fondoGlobal" style="font-size: 40px; margin: 10px 0;">$0.00</h1>
       <input type="number" id="montoDonar" placeholder="Monto $">
-      <button class="main-btn" style="background: var(--gold);" onclick="realizarDonacion()">DONAR</button>
+      <button class="main-btn" style="background: var(--gold);" onclick="realizarDonacion()">CONTRIBUIR</button>
     </div>
     <div class="card">
-      <h4 style="margin-top:0">🏆 Top Benefactores</h4>
-      <div id="topDonantes">Cargando ranking...</div>
+      <h4 style="margin-top:0">🏆 Ranking de Líderes</h4>
+      <div id="topDonantes"></div>
     </div>
   </div>
 </div>
@@ -118,39 +89,40 @@
 <script>
 const _supabase = supabase.createClient("https://dmlajgddeyfvwahswlvh.supabase.co", "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX");
 
-function notify(msg) {
-  const c = document.getElementById('notification-container');
-  const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
-  c.appendChild(t); setTimeout(() => t.remove(), 3000);
+// --- FUNCIÓN DE EDICIÓN "MAESTRA" (CREA EL EDITOR AL VUELO) ---
+function abrirEditor(id, actualNombre, actualComentario) {
+  const container = document.getElementById('editor-container');
+  // Inyectamos el HTML del modal directamente
+  container.innerHTML = `
+    <div class="modal-overlay" id="tempModal">
+      <div class="modal-box">
+        <h3 style="color:var(--primary); margin-top:0">Editar Publicación</h3>
+        <input type="text" id="newNombre" value="${actualNombre}">
+        <textarea id="newComentario" rows="4">${actualComentario}</textarea>
+        <button class="main-btn" onclick="confirmarEdicion(${id})">GUARDAR CAMBIOS</button>
+        <button onclick="cerrarEditor()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Cancelar</button>
+      </div>
+    </div>
+  `;
 }
 
-function cerrarModal() { document.getElementById('editModal').classList.add('hidden'); }
-
-// --- FUNCIONES DE EDICIÓN (REFORZADAS) ---
-function abrirEditor(id, nom, com) {
-  console.log("Abriendo editor para:", id); // Para depurar en consola
-  document.getElementById('editId').value = id;
-  document.getElementById('editNombre').value = nom;
-  document.getElementById('editComentario').value = com;
-  document.getElementById('editModal').classList.remove('hidden');
+function cerrarEditor() {
+  document.getElementById('editor-container').innerHTML = '';
 }
 
-async function guardarEdicion() {
-  const id = document.getElementById('editId').value;
-  const nom = document.getElementById('editNombre').value;
-  const com = document.getElementById('editComentario').value;
-  
-  const { error } = await _supabase.from('acciones').update({ nombre_ayudado: nom, comentario: com }).eq('id', id);
-  
+async function confirmarEdicion(id) {
+  const n = document.getElementById('newNombre').value;
+  const c = document.getElementById('newComentario').value;
+  const { error } = await _supabase.from('acciones').update({ nombre_ayudado: n, comentario: c }).eq('id', id);
   if(!error) {
-    notify("¡Actualizado!");
-    cerrarModal();
+    alert("¡Actualizado!");
+    cerrarEditor();
     actualizarPerfil();
     cargarMuro();
   }
 }
 
-// --- LÓGICA DE NAVEGACIÓN ---
+// --- LOGICA DE NAVEGACIÓN Y DATOS ---
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -158,33 +130,26 @@ function showTab(name) {
   if(event) event.currentTarget.classList.add('active');
   if(name === 'perfil') actualizarPerfil();
   if(name === 'comunidad') cargarMuro();
-  if(name === 'donar') { cargarFondo(); cargarTopDonantes(); }
+  if(name === 'donar') { cargarFondo(); cargarRanking(); }
 }
 
 async function cargarMuro() {
   const feed = document.getElementById("feedComunidad");
   const { data: { user } } = await _supabase.auth.getUser();
   const { data: acciones } = await _supabase.from('acciones').select('*').order('created_at', { ascending: false });
-  const { data: usuarios } = await _supabase.from('usuarios').select('*');
   const { data: vals } = await _supabase.from('validaciones').select('*');
 
   feed.innerHTML = "";
   acciones?.forEach(act => {
-    const autor = usuarios?.find(u => u.id === act.usuario_id);
     const n = vals?.filter(v => v.accion_id === act.id).length || 0;
     const esMio = user && act.usuario_id === user.id;
-
     feed.innerHTML += `
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <strong>@${autor?.email.split('@')[0]}</strong>
-          <span class="status-tag ${n >= 3 ? 'status-verified' : 'status-pending'}">${n >= 3 ? 'OK' : n+'/3'}</span>
-        </div>
         <p><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
         <img src="${act.foto_url}" class="img-wall">
-        <div style="display:flex; gap:10px">
-          ${esMio && n < 3 ? `<button class="edit-btn-sm" onclick="abrirEditor(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
-          <button class="main-btn" style="padding:10px; font-size:11px" onclick="validar(${act.id}, ${act.puntos}, '${act.usuario_id}')" ${(esMio || n>=3) ? 'disabled' : ''}>VALIDAR</button>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+          ${(esMio && n < 3) ? `<button class="btn-edit" onclick="abrirEditor(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
+          <button class="main-btn" style="padding:10px; font-size:11px;" onclick="validar(${act.id})" ${(esMio || n>=3) ? 'disabled' : ''}>VALIDAR (${n}/3)</button>
         </div>
       </div>`;
   });
@@ -203,21 +168,37 @@ async function actualizarPerfil() {
   hist?.forEach(i => {
     const n = allVals?.filter(v => v.accion_id === i.id).length || 0;
     cont.innerHTML += `
-      <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px">
-        <span>${i.nombre_ayudado} (${n}/3)</span>
-        ${n < 3 ? `<button class="edit-btn-sm" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : '✅'}
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>${i.nombre_ayudado}</span>
+        ${n < 3 ? `<button class="btn-edit" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : '✅'}
       </div>`;
   });
 }
 
-// --- DONACIONES Y TOP ---
-async function cargarTopDonantes() {
+async function cargarRanking() {
   const { data } = await _supabase.from('usuarios').select('email, capital_total').order('capital_total', { ascending: false }).limit(5);
   const cont = document.getElementById("topDonantes");
   cont.innerHTML = "";
-  data?.forEach((u, index) => {
-    cont.innerHTML += `<div class="top-item"><span>#${index+1} ${u.email.split('@')[0]}</span> <b>${u.capital_total} pts</b></div>`;
+  const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
+  data?.forEach((u, i) => {
+    cont.innerHTML += `<div class="top-item"><span class="medal">${medals[i]}</span> <span>${u.email.split('@')[0]}</span> <b style="margin-left:auto">${u.capital_total}</b></div>`;
   });
+}
+
+// --- OTROS ---
+async function registrarAccion() {
+  const nom = document.getElementById("nombreAyudado").value;
+  const com = document.getElementById("comentarioAccion").value;
+  const file = document.getElementById("fotoInput").files[0];
+  if(!nom || !file) return alert("Faltan datos");
+  
+  const { data: { user } } = await _supabase.auth.getUser();
+  const path = `${user.id}/${Date.now()}.jpg`;
+  await _supabase.storage.from('pruebas').upload(path, file);
+  const { data: { publicUrl } } = _supabase.storage.from('pruebas').getPublicUrl(path);
+  
+  await _supabase.from('acciones').insert([{ usuario_id: user.id, nombre_ayudado: nom, comentario: com, foto_url: publicUrl, puntos: 50 }]);
+  actualizarPerfil();
 }
 
 async function cargarFondo() {
@@ -230,20 +211,12 @@ async function realizarDonacion() {
   if(!m) return;
   const { data } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
   await _supabase.from('fondo_comunitario').update({ monto_total: (data.monto_total || 0) + m }).eq('id', 1);
-  notify("¡Gracias por tu aporte!");
-  cargarFondo();
-  cargarTopDonantes();
+  cargarFondo(); cargarRanking();
 }
 
 async function signIn() {
   const { error } = await _supabase.auth.signInWithPassword({ email: document.getElementById("email").value, password: document.getElementById("password").value });
-  if (error) notify(error.message); else verificarSesion();
-}
-
-async function signUp() {
-  const email = document.getElementById("email").value;
-  const { data, error } = await _supabase.auth.signUp({ email, password: document.getElementById("password").value });
-  if (data.user) await _supabase.from('usuarios').insert([{ id: data.user.id, email, capital_total: 0 }]);
+  if (error) alert(error.message); else verificarSesion();
 }
 
 async function signOut() { await _supabase.auth.signOut(); location.reload(); }

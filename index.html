@@ -3,45 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral - Premium</title>
+  <title>Capital Moral - Estabilidad Total</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; --pending: #ff4444; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
-    .container { max-width: 450px; margin: auto; padding: 20px; }
-    .card { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 24px; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; overflow-x: hidden; }
+    .container { max-width: 450px; margin: auto; padding: 20px; position: relative; z-index: 10; }
     
-    /* Notificaciones */
-    #notification-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; pointer-events: none; }
-    .toast { background: #222; color: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 8px; font-size: 13px; text-align: center; pointer-events: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+    /* MODAL - PRIORIDAD MÁXIMA */
+    #editModal { 
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: rgba(0,0,0,0.95); z-index: 99999; 
+      display: flex; align-items: center; justify-content: center; 
+    }
+    .modal-content { background: var(--card); width: 90%; max-width: 380px; padding: 25px; border-radius: 24px; border: 2px solid var(--primary); box-shadow: 0 0 30px rgba(0,255,136,0.2); }
 
-    /* Botones Estilizados */
-    .main-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 16px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; transition: 0.2s; }
-    .main-btn:active { transform: scale(0.96); }
-    .edit-btn-sm { background: #222; color: var(--primary); border: 1px solid var(--primary); padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; font-weight: bold; }
+    .card { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 24px; border: 1px solid #222; position: relative; }
     
-    /* Inputs */
-    input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #1a1a1a; border: 1px solid #333; color: white; margin-bottom: 12px; box-sizing: border-box; font-size: 15px; }
+    /* BOTONES */
+    .main-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 16px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; }
+    .edit-btn-sm { 
+      background: #111; color: var(--primary); border: 1px solid var(--primary); 
+      padding: 8px 15px; border-radius: 10px; font-size: 11px; cursor: pointer !important; 
+      font-weight: bold; position: relative; z-index: 50; pointer-events: auto !important;
+    }
+
+    input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #1a1a1a; border: 1px solid #333; color: white; margin-bottom: 12px; box-sizing: border-box; }
     
-    /* Muro y Rangos */
-    .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; border: 1px solid; text-transform: uppercase; }
-    .status-pending { color: var(--pending); border-color: var(--pending); }
-    .status-verified { color: var(--primary); border-color: var(--primary); }
-    .rango-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-left: 5px; vertical-align: middle; }
+    .status-tag { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; border: 1px solid; }
+    .rango-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 800; }
 
-    /* Estética Donar Premium */
-    .donate-card { background: linear-gradient(135deg, #1e1e1e 0%, #111 100%); border: 1px solid #333; overflow: hidden; }
-    .gold-box { background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
-    .fund-display { background: rgba(255, 204, 0, 0.05); border: 1px dashed var(--gold); border-radius: 20px; padding: 30px 10px; margin: 20px 0; }
+    /* DONAR & TOP */
+    .donate-card { background: linear-gradient(135deg, #1e1e1e 0%, #111 100%); border: 1px solid #333; }
+    .gold-text { background: linear-gradient(90deg, #bf953f, #fcf6ba, #aa771c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+    .top-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; font-size: 13px; }
 
-    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 1000; }
-    .nav-btn { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.98); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 1000; }
+    .nav-btn { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; font-size: 11px; }
     .nav-btn.active { color: var(--primary); }
-    .img-wall { width: 100%; border-radius: 18px; margin: 12px 0; aspect-ratio: 1/1; object-fit: cover; background: #222; }
+    .img-wall { width: 100%; border-radius: 18px; margin: 12px 0; aspect-ratio: 1/1; object-fit: cover; }
     .hidden { display: none !important; }
-
-    /* Modal */
-    #editModal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 5000; display:flex; align-items:center; justify-content:center; }
+    #notification-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100000; width: 90%; pointer-events: none; }
+    .toast { background: #222; color: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 8px; text-align: center; }
   </style>
 </head>
 <body>
@@ -49,61 +52,59 @@
 <div id="notification-container"></div>
 
 <div id="editModal" class="hidden">
-  <div class="card" style="width: 90%; max-width: 380px;">
-    <h3 style="margin-top:0">Editar Publicación</h3>
+  <div class="modal-content">
+    <h3 style="margin-top:0; color: var(--primary);">Actualizar Acción</h3>
     <input type="hidden" id="editId">
-    <input type="text" id="editNombre" placeholder="Nombre">
-    <textarea id="editComentario" rows="4" placeholder="Descripción"></textarea>
-    <button class="main-btn" onclick="guardarEdicion()">Guardar Cambios</button>
-    <button onclick="document.getElementById('editModal').classList.add('hidden')" style="background:none; border:none; color:#666; width:100%; margin-top:10px; cursor:pointer;">Cancelar</button>
+    <label style="font-size: 11px; opacity: 0.6;">Beneficiario:</label>
+    <input type="text" id="editNombre">
+    <label style="font-size: 11px; opacity: 0.6;">Detalles:</label>
+    <textarea id="editComentario" rows="4"></textarea>
+    <button class="main-btn" onclick="guardarEdicion()">Confirmar Cambios</button>
+    <button onclick="cerrarModal()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Cancelar</button>
   </div>
 </div>
 
 <div class="container">
-  <h1 style="text-align: center; font-weight: 900; letter-spacing: -1.5px;">CAPITAL <span style="color:var(--primary)">MORAL</span></h1>
+  <h1 style="text-align: center; font-weight: 900;">CAPITAL <span style="color:var(--primary)">MORAL</span></h1>
 
   <div id="authSection" class="card">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Contraseña">
     <button class="main-btn" onclick="signIn()">Entrar</button>
-    <button style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;" onclick="signUp()">Crear cuenta</button>
+    <button onclick="signUp()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Registrarse</button>
   </div>
 
   <div id="tab-perfil" class="tab-content hidden">
-    <div class="card" style="text-align: center; background: radial-gradient(circle at top, #1a2a1a 0%, #161616 100%);">
-      <div id="userRango" style="margin-bottom: 10px;"></div>
+    <div class="card" style="text-align: center;">
+      <div id="userRango"></div>
       <h2 id="puntosTotales" style="font-size: 55px; margin: 0;">0</h2>
-      <p id="valorEstimado" style="opacity: 0.5; font-size: 13px;">Impacto: $0.00</p>
+      <p id="valorEstimado" style="opacity: 0.5;">Impacto: $0.00</p>
     </div>
-
     <div class="card">
-      <h4 style="margin:0 0 15px 0;">¿Qué bien hiciste hoy?</h4>
-      <input type="text" id="nombreAyudado" placeholder="Persona o entidad ayudada">
-      <textarea id="comentarioAccion" placeholder="Cuéntanos brevemente qué pasó..."></textarea>
-      <input type="file" id="fotoInput" accept="image/*" style="font-size: 12px; background: none; border: none; padding: 0;">
-      <button class="main-btn" onclick="registrarAccion()">Subir al Muro</button>
+      <h4 style="margin:0 0 15px 0;">Nueva Acción</h4>
+      <input type="text" id="nombreAyudado" placeholder="¿A quién ayudaste?">
+      <textarea id="comentarioAccion" placeholder="Descripción..."></textarea>
+      <input type="file" id="fotoInput" accept="image/*">
+      <button class="main-btn" onclick="registrarAccion()">Publicar</button>
     </div>
-
-    <h4 style="margin-left: 10px;">Mi Historial</h4>
     <div id="miHistorial"></div>
     <button onclick="signOut()" style="background:none; border:none; color:#444; width:100%; padding:20px;">Cerrar sesión</button>
   </div>
 
   <div id="tab-comunidad" class="tab-content hidden">
-    <h3 style="text-align: center;">Muro Global</h3>
     <div id="feedComunidad"></div>
   </div>
 
   <div id="tab-donar" class="tab-content hidden">
     <div class="card donate-card" style="text-align: center;">
-      <h4 style="margin-top:0; opacity: 0.7; font-size: 12px; letter-spacing: 2px;">RESERVA COMUNITARIA</h4>
-      <div class="fund-display">
-        <h1 class="gold-box" id="fondoGlobal" style="font-size: 45px; margin:0;">$0.00</h1>
-        <small style="opacity:0.5">USD acumulados para impacto social</small>
-      </div>
-      <p style="font-size: 13px; line-height: 1.5; opacity: 0.8; padding: 0 10px;">Este fondo se utiliza para financiar proyectos validados por la comunidad.</p>
-      <input type="number" id="montoDonar" placeholder="Ingresa monto $" style="text-align: center; border-color: var(--gold); color: var(--gold); font-weight: bold;">
-      <button class="main-btn" style="background: var(--gold); color:black" onclick="realizarDonacion()">Hacer Contribución</button>
+      <h4 class="gold-text">RESERVA GLOBAL</h4>
+      <h1 id="fondoGlobal" style="font-size: 40px; margin:10px 0;">$0.00</h1>
+      <input type="number" id="montoDonar" placeholder="Monto $">
+      <button class="main-btn" style="background: var(--gold);" onclick="realizarDonacion()">DONAR</button>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">🏆 Top Benefactores</h4>
+      <div id="topDonantes">Cargando ranking...</div>
     </div>
   </div>
 </div>
@@ -123,125 +124,11 @@ function notify(msg) {
   c.appendChild(t); setTimeout(() => t.remove(), 3000);
 }
 
-function getRangoBadge(pts) {
-  if (pts >= 500) return '<span class="rango-badge" style="background:var(--gold); color:black">LEYENDA ORO</span>';
-  if (pts >= 200) return '<span class="rango-badge" style="background:#c0c0c0; color:black">HÉROE PLATA</span>';
-  return '<span class="rango-badge" style="background:#cd7f32; color:white">BRONCE</span>';
-}
+function cerrarModal() { document.getElementById('editModal').classList.add('hidden'); }
 
-function showTab(name) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.remove('hidden');
-  if(event) event.currentTarget.classList.add('active');
-  if(name === 'perfil') actualizarPerfil();
-  if(name === 'comunidad') cargarMuro();
-  if(name === 'donar') cargarFondo();
-}
-
-async function cargarMuro() {
-  const feed = document.getElementById("feedComunidad");
-  feed.innerHTML = "<p style='text-align:center'>Actualizando...</p>";
-  const { data: { user } } = await _supabase.auth.getUser();
-  const { data: acciones } = await _supabase.from('acciones').select('*').order('created_at', { ascending: false });
-  const { data: usuarios } = await _supabase.from('usuarios').select('*');
-  const { data: vals } = await _supabase.from('validaciones').select('*');
-
-  feed.innerHTML = "";
-  acciones?.forEach(act => {
-    const autor = usuarios?.find(u => u.id === act.usuario_id);
-    const votos = vals?.filter(v => v.accion_id === act.id) || [];
-    const num = votos.length;
-    const yaValide = user ? votos.some(v => v.usuario_id === user.id) : false;
-    const esMio = user && act.usuario_id === user.id;
-
-    feed.innerHTML += `
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div><strong>@${autor?.email.split('@')[0]}</strong> ${getRangoBadge(autor?.capital_total || 0)}</div>
-          <span class="status-tag ${num >= 3 ? 'status-verified' : 'status-pending'}">${num >= 3 ? 'Verificado' : num+'/3 Votos'}</span>
-        </div>
-        <p style="margin: 5px 0;"><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
-        <img src="${act.foto_url}" class="img-wall">
-        <div style="display:flex; gap:10px; margin-top:10px;">
-          ${esMio && num < 3 ? `<button class="edit-btn-sm" onclick="abrirEditor(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
-          <button class="main-btn" style="padding:10px; font-size:11px;" ${(yaValide || esMio || num >= 3) ? 'disabled' : ''} onclick="validar(${act.id}, ${act.puntos}, '${act.usuario_id}')">
-            ${yaValide ? 'VOTADO' : esMio ? 'TU PUBLICACIÓN' : num >= 3 ? 'VERIFICADO' : 'VALIDAR ✅'}
-          </button>
-        </div>
-      </div>`;
-  });
-}
-
-async function validar(id, pts, autorId) {
-  const { data: { user } } = await _supabase.auth.getUser();
-  const { data: yo } = await _supabase.from('usuarios').select('capital_total').eq('id', user.id).single();
-  
-  await _supabase.from('validaciones').insert([{ accion_id: id, usuario_id: user.id }]);
-  
-  if (yo.capital_total >= 500) {
-    notify("¡Poder Oro! Acción verificada.");
-    await _supabase.from('validaciones').insert([
-      { accion_id: id, usuario_id: '00000000-0000-0000-0000-000000000000' },
-      { accion_id: id, usuario_id: '11111111-1111-1111-1111-111111111111' }
-    ]);
-  }
-
-  const { data: votos } = await _supabase.from('validaciones').select('id').eq('accion_id', id);
-  if(votos.length >= 3) {
-    const { data: a } = await _supabase.from('usuarios').select('capital_total').eq('id', autorId).single();
-    await _supabase.from('usuarios').update({ capital_total: (a.capital_total || 0) + pts }).eq('id', autorId);
-  }
-  cargarMuro();
-}
-
-async function registrarAccion() {
-  const nom = document.getElementById("nombreAyudado").value;
-  const com = document.getElementById("comentarioAccion").value;
-  const file = document.getElementById("fotoInput").files[0];
-  if(!nom || !file) return notify("Falta nombre o foto");
-  
-  notify("Subiendo publicación...");
-  const { data: { user } } = await _supabase.auth.getUser();
-  const path = `${user.id}/${Date.now()}.jpg`;
-  await _supabase.storage.from('pruebas').upload(path, file);
-  const { data: { publicUrl } } = _supabase.storage.from('pruebas').getPublicUrl(path);
-  
-  await _supabase.from('acciones').insert([{ usuario_id: user.id, nombre_ayudado: nom, comentario: com, foto_url: publicUrl, puntos: 50 }]);
-  notify("¡Publicado con éxito!");
-  actualizarPerfil();
-}
-
-async function actualizarPerfil() {
-  const { data: { user } } = await _supabase.auth.getUser();
-  if(!user) return;
-  const { data: u } = await _supabase.from('usuarios').select('*').eq('id', user.id).single();
-  const { data: f } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
-  
-  document.getElementById("userRango").innerHTML = getRangoBadge(u?.capital_total || 0);
-  document.getElementById("puntosTotales").innerText = u?.capital_total || 0;
-  document.getElementById("valorEstimado").innerText = "Impacto: $" + ((u?.capital_total || 0) * 0.1).toFixed(2);
-  document.getElementById("fondoGlobal").innerText = "$" + (f?.monto_total || 0);
-
-  const { data: hist } = await _supabase.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false });
-  const { data: allVals } = await _supabase.from('validaciones').select('*');
-  const cont = document.getElementById("miHistorial");
-  cont.innerHTML = "";
-  
-  hist?.forEach(i => {
-    const n = allVals ? allVals.filter(v => v.accion_id === i.id).length : 0;
-    cont.innerHTML += `
-      <div class="card" style="padding:15px; margin-bottom:10px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <strong style="font-size:14px;">${i.nombre_ayudado}</strong><br>
-          <small style="opacity:0.5;">${n >= 3 ? 'Verificado ✅' : n+'/3 Validaciones'}</small>
-        </div>
-        ${n < 3 ? `<button class="edit-btn-sm" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : ''}
-      </div>`;
-  });
-}
-
+// --- FUNCIONES DE EDICIÓN (REFORZADAS) ---
 function abrirEditor(id, nom, com) {
+  console.log("Abriendo editor para:", id); // Para depurar en consola
   document.getElementById('editId').value = id;
   document.getElementById('editNombre').value = nom;
   document.getElementById('editComentario').value = com;
@@ -250,13 +137,87 @@ function abrirEditor(id, nom, com) {
 
 async function guardarEdicion() {
   const id = document.getElementById('editId').value;
-  await _supabase.from('acciones').update({ 
-    nombre_ayudado: document.getElementById('editNombre').value, 
-    comentario: document.getElementById('editComentario').value 
-  }).eq('id', id);
-  notify("Cambios guardados");
-  document.getElementById('editModal').classList.add('hidden');
-  actualizarPerfil();
+  const nom = document.getElementById('editNombre').value;
+  const com = document.getElementById('editComentario').value;
+  
+  const { error } = await _supabase.from('acciones').update({ nombre_ayudado: nom, comentario: com }).eq('id', id);
+  
+  if(!error) {
+    notify("¡Actualizado!");
+    cerrarModal();
+    actualizarPerfil();
+    cargarMuro();
+  }
+}
+
+// --- LÓGICA DE NAVEGACIÓN ---
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  if(event) event.currentTarget.classList.add('active');
+  if(name === 'perfil') actualizarPerfil();
+  if(name === 'comunidad') cargarMuro();
+  if(name === 'donar') { cargarFondo(); cargarTopDonantes(); }
+}
+
+async function cargarMuro() {
+  const feed = document.getElementById("feedComunidad");
+  const { data: { user } } = await _supabase.auth.getUser();
+  const { data: acciones } = await _supabase.from('acciones').select('*').order('created_at', { ascending: false });
+  const { data: usuarios } = await _supabase.from('usuarios').select('*');
+  const { data: vals } = await _supabase.from('validaciones').select('*');
+
+  feed.innerHTML = "";
+  acciones?.forEach(act => {
+    const autor = usuarios?.find(u => u.id === act.usuario_id);
+    const n = vals?.filter(v => v.accion_id === act.id).length || 0;
+    const esMio = user && act.usuario_id === user.id;
+
+    feed.innerHTML += `
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <strong>@${autor?.email.split('@')[0]}</strong>
+          <span class="status-tag ${n >= 3 ? 'status-verified' : 'status-pending'}">${n >= 3 ? 'OK' : n+'/3'}</span>
+        </div>
+        <p><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
+        <img src="${act.foto_url}" class="img-wall">
+        <div style="display:flex; gap:10px">
+          ${esMio && n < 3 ? `<button class="edit-btn-sm" onclick="abrirEditor(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
+          <button class="main-btn" style="padding:10px; font-size:11px" onclick="validar(${act.id}, ${act.puntos}, '${act.usuario_id}')" ${(esMio || n>=3) ? 'disabled' : ''}>VALIDAR</button>
+        </div>
+      </div>`;
+  });
+}
+
+async function actualizarPerfil() {
+  const { data: { user } } = await _supabase.auth.getUser();
+  const { data: u } = await _supabase.from('usuarios').select('*').eq('id', user.id).single();
+  document.getElementById("puntosTotales").innerText = u?.capital_total || 0;
+  
+  const { data: hist } = await _supabase.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false });
+  const { data: allVals } = await _supabase.from('validaciones').select('*');
+  const cont = document.getElementById("miHistorial");
+  cont.innerHTML = "<h4>Mis Acciones</h4>";
+  
+  hist?.forEach(i => {
+    const n = allVals?.filter(v => v.accion_id === i.id).length || 0;
+    cont.innerHTML += `
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px">
+        <span>${i.nombre_ayudado} (${n}/3)</span>
+        ${n < 3 ? `<button class="edit-btn-sm" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : '✅'}
+      </div>`;
+  });
+}
+
+// --- DONACIONES Y TOP ---
+async function cargarTopDonantes() {
+  const { data } = await _supabase.from('usuarios').select('email, capital_total').order('capital_total', { ascending: false }).limit(5);
+  const cont = document.getElementById("topDonantes");
+  cont.innerHTML = "";
+  data?.forEach((u, index) => {
+    cont.innerHTML += `<div class="top-item"><span>#${index+1} ${u.email.split('@')[0]}</span> <b>${u.capital_total} pts</b></div>`;
+  });
 }
 
 async function cargarFondo() {
@@ -266,28 +227,23 @@ async function cargarFondo() {
 
 async function realizarDonacion() {
   const m = parseFloat(document.getElementById("montoDonar").value);
-  if(!m || m <= 0) return notify("Monto no válido");
+  if(!m) return;
   const { data } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
   await _supabase.from('fondo_comunitario').update({ monto_total: (data.monto_total || 0) + m }).eq('id', 1);
-  notify("¡Contribución recibida!");
+  notify("¡Gracias por tu aporte!");
   cargarFondo();
+  cargarTopDonantes();
 }
 
 async function signIn() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const { error } = await _supabase.auth.signInWithPassword({ email, password });
-  if (error) notify("Error: " + error.message); else verificarSesion();
+  const { error } = await _supabase.auth.signInWithPassword({ email: document.getElementById("email").value, password: document.getElementById("password").value });
+  if (error) notify(error.message); else verificarSesion();
 }
 
 async function signUp() {
   const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const { data, error } = await _supabase.auth.signUp({ email, password });
-  if (data.user) {
-    await _supabase.from('usuarios').insert([{ id: data.user.id, email, capital_total: 0 }]);
-    notify("Cuenta creada. ¡Entra ahora!");
-  } else notify(error.message);
+  const { data, error } = await _supabase.auth.signUp({ email, password: document.getElementById("password").value });
+  if (data.user) await _supabase.from('usuarios').insert([{ id: data.user.id, email, capital_total: 0 }]);
 }
 
 async function signOut() { await _supabase.auth.signOut(); location.reload(); }

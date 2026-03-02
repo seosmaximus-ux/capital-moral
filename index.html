@@ -3,22 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral - Evolución</title>
+  <title>Capital Moral - Sistema de Rangos</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; --pending: #ff4444; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
     .container { max-width: 480px; margin: auto; padding: 20px; }
-    .card { background: var(--card); padding: 20px; margin: 15px 0; border-radius: 20px; border: 1px solid #222; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; }
+    .card { background: var(--card); padding: 20px; margin: 15px 0; border-radius: 20px; border: 1px solid #222; position: relative; }
     
     /* Notificaciones */
-    #notification-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 400px; }
-    .toast { background: #222; color: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-size: 13px; }
+    #notification-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 400px; pointer-events: none; }
+    .toast { background: #222; color: white; padding: 15px; border-radius: 12px; border-left: 5px solid var(--primary); margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-size: 13px; text-align: center; }
 
-    /* Estilos de botones */
+    /* Rangos */
+    .rango-badge { font-size: 10px; padding: 3px 8px; border-radius: 5px; font-weight: bold; text-transform: uppercase; margin-left: 5px; }
+    .rango-bronce { background: #cd7f32; color: white; }
+    .rango-plata { background: #c0c0c0; color: black; }
+    .rango-oro { background: var(--gold); color: black; box-shadow: 0 0 10px var(--gold); }
+
+    /* Botones */
     .main-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; }
-    .edit-btn { background: #333; color: #00ff88; border: 1px solid #444; padding: 5px 10px; border-radius: 8px; font-size: 11px; cursor: pointer; margin-top: 5px; }
-    .btn-validar { background: #222; border: 1px solid #444; color: white; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+    .edit-btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 5px 10px; border-radius: 8px; font-size: 11px; cursor: pointer; }
+    .btn-validar { background: #222; border: 1px solid #444; color: white; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; }
     .btn-validar.active { background: var(--primary); color: #000; }
 
     /* Inputs */
@@ -31,10 +37,9 @@
     .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,15,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; }
     .nav-btn { background: none; border: none; color: #666; cursor: pointer; font-size: 11px; font-weight: bold; }
     .nav-btn.active { color: var(--primary); }
-    .img-wall { width: 100%; border-radius: 15px; margin: 10px 0; aspect-ratio: 1/1; object-fit: cover; }
+    .img-wall { width: 100%; border-radius: 15px; margin: 10px 0; aspect-ratio: 1/1; object-fit: cover; background: #222; }
     .hidden { display: none !important; }
 
-    /* Modal de Edición */
     #editModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
@@ -48,9 +53,8 @@
     <input type="hidden" id="editId">
     <input type="text" id="editNombre" placeholder="Nombre">
     <textarea id="editComentario" placeholder="Descripción"></textarea>
-    <p style="font-size: 10px; color: #888;">* La foto no se puede cambiar para mantener la integridad de la prueba inicial.</p>
     <button class="main-btn" onclick="guardarEdicion()">Guardar Cambios</button>
-    <button class="edit-btn" onclick="document.getElementById('editModal').classList.add('hidden')" style="width:100%; margin-top:10px;">Cancelar</button>
+    <button class="edit-btn" onclick="document.getElementById('editModal').classList.add('hidden')" style="width:100%; margin-top:10px; color: white; border-color: #444;">Cancelar</button>
   </div>
 </div>
 
@@ -66,8 +70,8 @@
 
   <div id="tab-perfil" class="tab-content hidden">
     <div class="card" style="text-align: center; background: linear-gradient(180deg, #1a1a1a, #0a0a0a);">
-      <small style="color:var(--primary)">PUNTOS VALIDADOS</small>
-      <h2 id="puntosTotales" style="font-size: 50px; margin: 10px 0;">0</h2>
+      <div id="userRango"></div>
+      <h2 id="puntosTotales" style="font-size: 50px; margin: 5px 0;">0</h2>
       <p id="valorEstimado" style="opacity: 0.7; font-size: 13px;">Impacto: $0.00</p>
     </div>
 
@@ -80,10 +84,10 @@
     </div>
 
     <div class="card">
-      <h4>Mis Acciones</h4>
-      <div id="miHistorial"></div>
+      <h4>Mis Acciones Recientes</h4>
+      <div id="miHistorial">Cargando historial...</div>
     </div>
-    <button onclick="signOut()" style="background:none; border:none; color:#444; width:100%;">Salir</button>
+    <button onclick="signOut()" style="background:none; border:none; color:#444; width:100%;">Cerrar Sesión</button>
   </div>
 
   <div id="tab-comunidad" class="tab-content hidden">
@@ -95,7 +99,7 @@
     <div class="card" style="text-align: center; border-color: var(--gold);">
       <h1 id="fondoGlobal">$0.00</h1>
       <input type="number" id="montoDonar" placeholder="Donar ($)">
-      <button class="main-btn" style="background: var(--gold);" onclick="realizarDonacion()">CONTRIBUIR</button>
+      <button class="main-btn" style="background: var(--gold); color: black;" onclick="realizarDonacion()">CONTRIBUIR</button>
     </div>
   </div>
 </div>
@@ -115,6 +119,12 @@ function notify(msg) {
   c.appendChild(t); setTimeout(() => t.remove(), 3000);
 }
 
+function getRango(puntos) {
+  if (puntos >= 500) return '<span class="rango-badge rango-oro">Leyenda Oro</span>';
+  if (puntos >= 200) return '<span class="rango-badge rango-plata">Héroe Plata</span>';
+  return '<span class="rango-badge rango-bronce">Colaborador Bronce</span>';
+}
+
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -127,16 +137,18 @@ function showTab(name) {
 
 async function cargarMuro() {
   const feed = document.getElementById("feedComunidad");
-  feed.innerHTML = "<p style='text-align:center;'>Cargando...</p>";
+  feed.innerHTML = "<p style='text-align:center;'>Actualizando muro...</p>";
+  
   const { data: { user } } = await _supabase.auth.getUser();
   const { data: acciones } = await _supabase.from('acciones').select('*').order('created_at', { ascending: false });
-  const { data: usuarios } = await _supabase.from('usuarios').select('id, email');
+  const { data: usuarios } = await _supabase.from('usuarios').select('id, email, capital_total');
   const { data: vals } = await _supabase.from('validaciones').select('*');
 
   feed.innerHTML = "";
   acciones?.forEach(act => {
     const autor = usuarios?.find(u => u.id === act.usuario_id);
-    const email = autor ? autor.email.split('@')[0] : "Hero";
+    const email = autor ? autor.email.split('@')[0] : "Anónimo";
+    const puntosAutor = autor ? autor.capital_total : 0;
     const votos = vals?.filter(v => v.accion_id === act.id) || [];
     const num = votos.length;
     const ya = user ? votos.some(v => v.usuario_id === user.id) : false;
@@ -144,15 +156,19 @@ async function cargarMuro() {
 
     feed.innerHTML += `
       <div class="card">
-        <div style="display:flex; justify-content:space-between;">
-          <strong>@${email}</strong>
-          <span class="status-tag ${num >= 3 ? 'status-verified' : 'status-pending'}">${num >= 3 ? '✅' : `Votos: ${num}/3`}</span>
+        <div style="display:flex; justify-content:space-between; align-items: center;">
+          <div><strong>@${email}</strong> ${getRango(puntosAutor)}</div>
+          <span class="status-tag ${num >= 3 ? 'status-verified' : 'status-pending'}">${num >= 3 ? 'VERIFICADO' : `${num}/3 Votos`}</span>
         </div>
-        <p style="font-size:14px; margin: 10px 0;"><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
+        <p style="margin: 10px 0;"><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
         <img src="${act.foto_url}" class="img-wall">
-        <button class="btn-validar ${ya ? 'active' : ''}" ${(ya || esMio || num >= 3) ? 'disabled' : ''} onclick="validar(${act.id}, ${act.puntos}, '${act.usuario_id}')">
-          ${ya ? 'Validado' : esMio ? 'Tu post' : num >= 3 ? 'Completado' : 'Validar ✅'}
-        </button>
+        
+        <div style="display:flex; gap:10px;">
+          ${esMio && num < 3 ? `<button class="edit-btn" onclick="abrirEditor(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR MI POST</button>` : ''}
+          <button class="btn-validar ${ya ? 'active' : ''}" ${(ya || esMio || num >= 3) ? 'disabled' : ''} onclick="validar(${act.id}, ${act.puntos}, '${act.usuario_id}')">
+            ${ya ? 'YA VALIDASTE' : esMio ? 'ES TUYO' : num >= 3 ? 'TERMINADO' : 'VALIDAR ✅'}
+          </button>
+        </div>
       </div>`;
   });
 }
@@ -164,7 +180,7 @@ async function validar(id, pts, autorId) {
   if(votos.length === 3) {
     const { data: a } = await _supabase.from('usuarios').select('capital_total').eq('id', autorId).single();
     await _supabase.from('usuarios').update({ capital_total: (a.capital_total || 0) + pts }).eq('id', autorId);
-    notify("¡Puntos otorgados!");
+    notify("¡Puntos otorgados al autor!");
   }
   cargarMuro();
 }
@@ -180,32 +196,40 @@ async function registrarAccion() {
   await _supabase.storage.from('pruebas').upload(path, file);
   const { data: { publicUrl } } = _supabase.storage.from('pruebas').getPublicUrl(path);
   await _supabase.from('acciones').insert([{ usuario_id: user.id, nombre_ayudado: nom, comentario: document.getElementById("comentarioAccion").value, foto_url: publicUrl, puntos: 50 }]);
-  notify("Publicado exitosamente");
+  notify("¡Publicado! Revisa el muro.");
   location.reload();
 }
 
 async function actualizarPerfil() {
   const { data: { user } } = await _supabase.auth.getUser();
+  if(!user) return;
   const { data: u } = await _supabase.from('usuarios').select('*').eq('id', user.id).single();
   const { data: f } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
+  
+  document.getElementById("userRango").innerHTML = getRango(u?.capital_total || 0);
   document.getElementById("puntosTotales").innerText = u?.capital_total || 0;
-  document.getElementById("valorEstimado").innerText = "Impacto: $" + (u?.capital_total * 0.1).toFixed(2);
+  document.getElementById("valorEstimado").innerText = "Impacto: $" + ((u?.capital_total || 0) * 0.1).toFixed(2);
   document.getElementById("fondoGlobal").innerText = "$" + (f?.monto_total || 0);
 
   const { data: hist } = await _supabase.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false });
   const { data: allVals } = await _supabase.from('validaciones').select('*');
   
   const cont = document.getElementById("miHistorial");
+  if(!hist || hist.length === 0) {
+    cont.innerHTML = "<p style='font-size:12px; opacity:0.5;'>No has publicado nada aún.</p>";
+    return;
+  }
+
   cont.innerHTML = "";
-  hist?.forEach(i => {
-    const numVotos = allVals.filter(v => v.accion_id === i.id).length;
+  hist.forEach(i => {
+    const numVotos = allVals ? allVals.filter(v => v.accion_id === i.id).length : 0;
     cont.innerHTML += `
       <div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <strong>${i.nombre_ayudado}</strong><br>
-          <small>${numVotos}/3 validaciones</small>
+        <div style="max-width: 70%;">
+          <strong style="font-size:13px;">${i.nombre_ayudado}</strong><br>
+          <small style="opacity:0.6;">${numVotos}/3 validaciones</small>
         </div>
-        ${numVotos < 3 ? `<button class="edit-btn" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">Editar</button>` : '<span style="color:var(--primary); font-size:10px;">Verificado</span>'}
+        ${numVotos < 3 ? `<button class="edit-btn" onclick="abrirEditor(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">Editar</button>` : '<b style="color:var(--primary); font-size:10px;">LISTO</b>'}
       </div>`;
   });
 }
@@ -222,9 +246,10 @@ async function guardarEdicion() {
   const nom = document.getElementById('editNombre').value;
   const com = document.getElementById('editComentario').value;
   await _supabase.from('acciones').update({ nombre_ayudado: nom, comentario: com }).eq('id', id);
-  notify("Acción actualizada");
+  notify("Cambios guardados");
   document.getElementById('editModal').classList.add('hidden');
   actualizarPerfil();
+  cargarMuro();
 }
 
 async function cargarFondo() {
@@ -234,9 +259,10 @@ async function cargarFondo() {
 
 async function realizarDonacion() {
   const m = parseFloat(document.getElementById("montoDonar").value);
+  if(!m) return;
   const { data } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
   await _supabase.from('fondo_comunitario').update({ monto_total: (data.monto_total || 0) + m }).eq('id', 1);
-  notify("¡Donación exitosa!");
+  notify("¡Gracias por tu aporte!");
   cargarFondo();
 }
 
@@ -248,8 +274,10 @@ async function signIn() {
 async function signUp() {
   const email = document.getElementById("email").value;
   const { data, error } = await _supabase.auth.signUp({ email, password: document.getElementById("password").value });
-  if (data.user) await _supabase.from('usuarios').insert([{ id: data.user.id, email, capital_total: 0 }]);
-  notify("Cuenta creada");
+  if (data.user) {
+    await _supabase.from('usuarios').insert([{ id: data.user.id, email, capital_total: 0 }]);
+    notify("Cuenta creada. ¡Bienvenido!");
+  } else notify(error.message);
 }
 
 async function signOut() { await _supabase.auth.signOut(); location.reload(); }

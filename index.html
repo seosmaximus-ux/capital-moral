@@ -3,31 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral - Edición Forzada</title>
+  <title>Capital Moral - Edición Oro</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: rgba(255, 204, 0, 0.2); --silver: rgba(192, 192, 192, 0.2); --bronze: rgba(205, 127, 50, 0.2); }
+    :root { --primary: #00ff88; --bg: #0a0a0a; --card: #161616; --text: #f0f0f0; --gold: #ffcc00; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
     .container { max-width: 450px; margin: auto; padding: 20px; }
     .card { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 24px; border: 1px solid #222; }
     
-    /* MODAL OVERLAY */
+    /* MODAL */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; display: flex; align-items: center; justify-content: center; }
     .modal-box { background: #1a1a1a; width: 85%; padding: 25px; border-radius: 24px; border: 2px solid var(--primary); }
 
     .main-btn { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 16px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; }
-    .btn-edit { background: #333; color: var(--primary); border: 1px solid var(--primary); padding: 10px 15px; border-radius: 12px; cursor: pointer !important; font-weight: bold; font-size: 12px; display: inline-block; }
+    .btn-edit { background: #333; color: var(--primary); border: 1px solid var(--primary); padding: 10px 15px; border-radius: 12px; cursor: pointer !important; font-weight: bold; font-size: 12px; }
 
     input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px; box-sizing: border-box; }
     
-    /* RANKING PREMIUM */
-    .top-item { display: flex; align-items: center; padding: 15px; border-radius: 15px; margin-bottom: 8px; border: 1px solid #222; }
-    .rank-0 { background: var(--gold); border-color: #ffcc00; } /* Oro */
-    .rank-1 { background: var(--silver); border-color: #c0c0c0; } /* Plata */
-    .rank-2 { background: var(--bronze); border-color: #cd7f32; } /* Bronce */
-    .medal { font-size: 20px; margin-right: 12px; }
+    /* RANKING CON BRILLO */
+    .top-item { display: flex; align-items: center; padding: 15px; border-radius: 15px; margin-bottom: 8px; border: 1px solid #222; position: relative; overflow: hidden; }
+    .rank-0 { background: rgba(255, 204, 0, 0.2); border-color: var(--gold); }
+    .rank-1 { background: rgba(192, 192, 192, 0.2); border-color: #c0c0c0; }
+    .rank-2 { background: rgba(205, 127, 50, 0.2); border-color: #cd7f32; }
 
-    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0a; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; z-index: 500; }
+    /* Efecto Brillo Oro */
+    .rank-0::after {
+      content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: rotate(45deg); animation: shine 3s infinite;
+    }
+    @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0a0a; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; }
     .nav-btn { background: none; border: none; color: #555; font-weight: bold; cursor: pointer; }
     .nav-btn.active { color: var(--primary); }
     .hidden { display: none !important; }
@@ -43,24 +50,17 @@
 
   <div id="authSection" class="card">
     <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button class="main-btn" onclick="signIn()">Entrar</button>
+    <input type="password" id="password" placeholder="Clave">
+    <button class="main-btn" onclick="iniciar()">Entrar</button>
   </div>
 
   <div id="tab-perfil" class="tab-content hidden">
     <div class="card" style="text-align: center;">
       <h2 id="puntosTotales" style="font-size: 50px; margin: 0;">0</h2>
-      <p style="opacity:0.5">Mis Puntos Morales</p>
-    </div>
-    <div class="card">
-      <h4>Nueva Acción</h4>
-      <input type="text" id="nombreAyudado" placeholder="¿A quién ayudaste?">
-      <textarea id="comentarioAccion" placeholder="Descripción..."></textarea>
-      <input type="file" id="fotoInput" accept="image/*">
-      <button class="main-btn" onclick="registrarAccion()">Publicar</button>
+      <p style="opacity:0.5">Mis Puntos</p>
     </div>
     <div id="miHistorial"></div>
-    <button onclick="signOut()" style="width:100%; background:none; border:none; color:#444; margin-top:20px; cursor:pointer;">Cerrar Sesión</button>
+    <button onclick="cerrarSesion()" style="width:100%; background:none; border:none; color:#444; margin-top:20px; cursor:pointer;">Salir</button>
   </div>
 
   <div id="tab-comunidad" class="tab-content hidden">
@@ -68,170 +68,100 @@
   </div>
 
   <div id="tab-donar" class="tab-content hidden">
-    <div class="card" style="text-align: center; border: 2px solid #ffcc00;">
-      <h4 style="color:#ffcc00">FONDO COMUNITARIO</h4>
-      <h1 id="fondoGlobal" style="font-size: 40px; margin: 10px 0;">$0.00</h1>
-      <input type="number" id="montoDonar" placeholder="Monto $">
-      <button class="main-btn" style="background: #ffcc00;" onclick="realizarDonacion()">CONTRIBUIR</button>
+    <div class="card" style="border: 2px solid var(--gold);">
+      <h1 id="fondoGlobal" style="text-align: center; font-size: 40px; margin: 10px 0;">$0.00</h1>
+      <button class="main-btn" style="background: var(--gold);" onclick="donarManual()">DONAR $10</button>
     </div>
     <div class="card">
-      <h4 style="margin-top:0">🏆 Muro de Honor</h4>
+      <h4>🏆 Ranking</h4>
       <div id="topDonantes"></div>
     </div>
   </div>
 </div>
 
 <nav id="navBar" class="nav-bar hidden">
-  <button class="nav-btn active" onclick="showTab('perfil')">Perfil</button>
-  <button class="nav-btn" onclick="showTab('comunidad')">Muro</button>
-  <button class="nav-btn" onclick="showTab('donar')">Donar</button>
+  <button class="nav-btn active" onclick="verPestana('perfil')">Perfil</button>
+  <button class="nav-btn" onclick="verPestana('comunidad')">Muro</button>
+  <button class="nav-btn" onclick="verPestana('donar')">Donar</button>
 </nav>
 
 <script>
-const _supabase = supabase.createClient("https://dmlajgddeyfvwahswlvh.supabase.co", "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX");
+// Limpieza absoluta de variables para evitar SyntaxError
+const _sb = supabase.createClient("https://dmlajgddeyfvwahswlvh.supabase.co", "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX");
 
-// --- FUNCIÓN DE EDICIÓN TOTALMENTE RENOMBRADA ---
-function ejecutarEdicion(id, nom, com) {
-  console.log("Intentando editar ID:", id); // Esto aparecerá en la consola del navegador
-  const cont = document.getElementById('editor-container');
-  cont.innerHTML = `
+function abrirEditor(id, n, c) {
+  console.log("Editando:", id);
+  const div = document.getElementById('editor-container');
+  div.innerHTML = `
     <div class="modal-overlay">
       <div class="modal-box">
-        <h3 style="color:var(--primary); margin-top:0">Actualizar Datos</h3>
-        <input type="text" id="edit_n" value="${nom}">
-        <textarea id="edit_c" rows="4">${com}</textarea>
-        <button class="main-btn" onclick="procesoGuardar(${id})">GUARDAR CAMBIOS</button>
-        <button onclick="document.getElementById('editor-container').innerHTML=''" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer;">Cerrar</button>
+        <h3>Editar</h3>
+        <input type="text" id="in_n" value="${n}">
+        <textarea id="in_c" rows="4">${c}</textarea>
+        <button class="main-btn" onclick="guardarCambios(${id})">GUARDAR</button>
+        <button onclick="document.getElementById('editor-container').innerHTML=''" style="width:100%; background:none; border:none; color:#666; margin-top:10px; cursor:pointer;">Cerrar</button>
       </div>
     </div>
   `;
 }
 
-async function procesoGuardar(id) {
-  const n = document.getElementById('edit_n').value;
-  const c = document.getElementById('edit_c').value;
-  const { error } = await _supabase.from('acciones').update({ nombre_ayudado: n, comentario: c }).eq('id', id);
+async function guardarCambios(id) {
+  const n = document.getElementById('in_n').value;
+  const c = document.getElementById('in_c').value;
+  const { error } = await _sb.from('acciones').update({ nombre_ayudado: n, comentario: c }).eq('id', id);
   if(!error) {
     document.getElementById('editor-container').innerHTML = '';
-    actualizarPerfil();
-    cargarMuro();
+    verPestana('perfil');
   }
 }
 
-// --- LOGICA DE NAVEGACIÓN ---
-function showTab(name) {
+async function verPestana(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.remove('hidden');
-  if(event) event.currentTarget.classList.add('active');
-  if(name === 'perfil') actualizarPerfil();
-  if(name === 'comunidad') cargarMuro();
-  if(name === 'donar') { cargarFondo(); cargarRanking(); }
-}
-
-async function cargarMuro() {
-  const feed = document.getElementById("feedComunidad");
-  const { data: { user } } = await _supabase.auth.getUser();
-  const { data: acciones } = await _supabase.from('acciones').select('*').order('created_at', { ascending: false });
-  const { data: vals } = await _supabase.from('validaciones').select('*');
-
-  feed.innerHTML = "";
-  acciones?.forEach(act => {
-    const n = vals?.filter(v => v.accion_id === act.id).length || 0;
-    const esMio = user && act.usuario_id === user.id;
-    feed.innerHTML += `
-      <div class="card">
-        <p><b>${act.nombre_ayudado}</b>: ${act.comentario}</p>
-        <img src="${act.foto_url}" class="img-wall">
-        <div style="display:flex; gap:10px; margin-top:15px;">
-          ${(esMio && n < 3) ? `<button class="btn-edit" onclick="ejecutarEdicion(${act.id}, '${act.nombre_ayudado}', '${act.comentario}')">EDITAR</button>` : ''}
-          <button class="main-btn" style="padding:10px; font-size:11px;" onclick="validar(${act.id})" ${(esMio || n>=3) ? 'disabled' : ''}>VALIDAR (${n}/3)</button>
-        </div>
+  if(name === 'perfil') {
+    const { data: { user } } = await _sb.auth.getUser();
+    const { data: u } = await _sb.from('usuarios').select('*').eq('id', user.id).single();
+    document.getElementById("puntosTotales").innerText = u.capital_total;
+    
+    const { data: acts } = await _sb.from('acciones').select('*').eq('usuario_id', user.id);
+    const h = document.getElementById("miHistorial");
+    h.innerHTML = "";
+    acts?.forEach(a => {
+      h.innerHTML += `<div class="card" style="display:flex; justify-content:space-between">
+        <span>${a.nombre_ayudado}</span>
+        <button class="btn-edit" onclick="abrirEditor(${a.id}, '${a.nombre_ayudado}', '${a.comentario}')">EDITAR</button>
       </div>`;
-  });
+    });
+  }
+  if(name === 'donar') {
+    const { data } = await _sb.from('usuarios').select('email, capital_total').order('capital_total', { ascending: false }).limit(5);
+    const cont = document.getElementById("topDonantes");
+    cont.innerHTML = "";
+    const meds = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
+    data?.forEach((u, i) => {
+      cont.innerHTML += `<div class="top-item rank-${i}"><span>${meds[i]} ${u.email.split('@')[0]}</span><b style="margin-left:auto">${u.capital_total}</b></div>`;
+    });
+  }
 }
 
-async function actualizarPerfil() {
-  const { data: { user } } = await _supabase.auth.getUser();
-  const { data: u } = await _supabase.from('usuarios').select('*').eq('id', user.id).single();
-  document.getElementById("puntosTotales").innerText = u?.capital_total || 0;
-  
-  const { data: hist } = await _supabase.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', { ascending: false });
-  const { data: allVals } = await _supabase.from('validaciones').select('*');
-  const cont = document.getElementById("miHistorial");
-  cont.innerHTML = "<h4>Mi Historial</h4>";
-  
-  hist?.forEach(i => {
-    const n = allVals?.filter(v => v.accion_id === i.id).length || 0;
-    cont.innerHTML += `
-      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>${i.nombre_ayudado}</span>
-        ${n < 3 ? `<button class="btn-edit" onclick="ejecutarEdicion(${i.id}, '${i.nombre_ayudado}', '${i.comentario}')">EDITAR</button>` : '✅'}
-      </div>`;
-  });
+async function iniciar() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const { error } = await _sb.auth.signInWithPassword({ email, password });
+  if (error) alert(error.message); else location.reload();
 }
 
-async function cargarRanking() {
-  const { data } = await _supabase.from('usuarios').select('email, capital_total').order('capital_total', { ascending: false }).limit(5);
-  const cont = document.getElementById("topDonantes");
-  cont.innerHTML = "";
-  const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
-  data?.forEach((u, i) => {
-    cont.innerHTML += `
-      <div class="top-item rank-${i}">
-        <span class="medal">${medals[i]}</span> 
-        <span>${u.email.split('@')[0]}</span> 
-        <b style="margin-left:auto">${u.capital_total} pts</b>
-      </div>`;
-  });
-}
+async function cerrarSesion() { await _sb.auth.signOut(); location.reload(); }
 
-// --- OTROS ---
-async function registrarAccion() {
-  const nom = document.getElementById("nombreAyudado").value;
-  const com = document.getElementById("comentarioAccion").value;
-  const file = document.getElementById("fotoInput").files[0];
-  if(!nom || !file) return alert("Faltan datos");
-  
-  const { data: { user } } = await _supabase.auth.getUser();
-  const path = `${user.id}/${Date.now()}.jpg`;
-  await _supabase.storage.from('pruebas').upload(path, file);
-  const { data: { publicUrl } } = _supabase.storage.from('pruebas').getPublicUrl(path);
-  
-  await _supabase.from('acciones').insert([{ usuario_id: user.id, nombre_ayudado: nom, comentario: com, foto_url: publicUrl, puntos: 50 }]);
-  actualizarPerfil();
-}
-
-async function cargarFondo() {
-  const { data } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
-  document.getElementById("fondoGlobal").innerText = "$" + (data?.monto_total || 0);
-}
-
-async function realizarDonacion() {
-  const m = parseFloat(document.getElementById("montoDonar").value);
-  if(!m) return;
-  const { data } = await _supabase.from('fondo_comunitario').select('*').eq('id', 1).single();
-  await _supabase.from('fondo_comunitario').update({ monto_total: (data.monto_total || 0) + m }).eq('id', 1);
-  cargarFondo(); cargarRanking();
-}
-
-async function signIn() {
-  const { error } = await _supabase.auth.signInWithPassword({ email: document.getElementById("email").value, password: document.getElementById("password").value });
-  if (error) alert(error.message); else verificarSesion();
-}
-
-async function signOut() { await _supabase.auth.signOut(); location.reload(); }
-
-async function verificarSesion() {
-  const { data: { user } } = await _supabase.auth.getUser();
+async function check() {
+  const { data: { user } } = await _sb.auth.getUser();
   if (user) {
     document.getElementById("authSection").classList.add("hidden");
     document.getElementById("navBar").classList.remove("hidden");
-    document.getElementById("tab-perfil").classList.remove("hidden");
-    actualizarPerfil();
+    verPestana('perfil');
   }
 }
-verificarSesion();
+check();
 </script>
 </body>
 </html>

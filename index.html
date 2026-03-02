@@ -3,136 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capital Moral</title>
+  <title>Capital Moral - Premium Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --p: #00ff88; --bg: #0a0a0a; --c: #161616; --gold: #ffcc00; }
-    body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 80px; }
-    .container { max-width: 400px; margin: auto; padding: 20px; }
-    .card { background: var(--c); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #222; position: relative; overflow: hidden; }
+    :root { --p: #00ff88; --bg: #0a0a0a; --c: #161616; --gold: #ffcc00; --text: #f0f0f0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
+    .container { max-width: 450px; margin: auto; padding: 20px; }
     
-    /* RANKING CON BRILLO */
-    .r-0 { background: rgba(255,204,0,0.15); border: 1px solid var(--gold); }
-    .r-0::after { content:""; position:absolute; top:-50%; left:-100%; width:200%; height:200%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transform: rotate(45deg); animation: shine 3s infinite; }
+    /* Estética de Tarjetas */
+    .card { background: var(--c); padding: 20px; border-radius: 24px; margin-bottom: 20px; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+    
+    /* Botones Premium */
+    .btn-main { width: 100%; padding: 16px; background: var(--p); border: none; border-radius: 16px; font-weight: 800; cursor: pointer; color: #000; text-transform: uppercase; transition: 0.2s; }
+    .btn-main:active { transform: scale(0.98); }
+    .btn-edit { background: rgba(0,255,136,0.1); color: var(--p); border: 1px solid var(--p); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 11px; }
+
+    /* Inputs */
+    input, textarea { width: 100%; padding: 15px; border-radius: 14px; background: #000; border: 1px solid #333; color: #fff; margin-bottom: 12px; box-sizing: border-box; }
+
+    /* Ranking con Brillo Animado */
+    .rank-gold { background: linear-gradient(135deg, rgba(255,204,0,0.2) 0%, rgba(20,20,20,1) 100%); border: 1px solid var(--gold); overflow: hidden; }
+    .rank-gold::after {
+      content: ""; position: absolute; top: -50%; left: -100%; width: 200%; height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: rotate(45deg); animation: shine 4s infinite;
+    }
     @keyframes shine { 100% { left: 100%; } }
 
-    .btn { width: 100%; padding: 15px; background: var(--p); border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: #000; }
-    .btn-edit { background: #333; color: var(--p); border: 1px solid var(--p); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; }
-    
-    input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff; box-sizing: border-box; }
-    .nav { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; }
+    /* Navegación */
+    .nav { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); display: flex; justify-content: space-around; padding: 18px; border-top: 1px solid #222; backdrop-filter: blur(10px); z-index: 1000; }
+    .nav-btn { background: none; border: none; color: #555; font-weight: bold; font-size: 11px; cursor: pointer; }
+    .nav-btn.active { color: var(--p); }
+
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    .img-wall { width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid #333; }
     .hidden { display: none !important; }
-    .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999; display:flex; align-items:center; justify-content:center; }
   </style>
 </head>
 <body>
 
-<div id="modals"></div>
+<div id="modal-layer"></div>
 
 <div class="container">
-  <h2 style="text-align:center">CAPITAL <span style="color:var(--p)">MORAL</span></h2>
+  <h1 style="text-align: center; letter-spacing: -1px;">CAPITAL <span style="color:var(--p)">MORAL</span></h1>
 
-  <div id="auth" class="card">
-    <input id="em" type="email" placeholder="Email">
-    <input id="pw" type="password" placeholder="Password">
-    <button class="btn" onclick="login()">ENTRAR</button>
+  <div id="section-auth" class="card">
+    <h3 style="text-align: center; margin-top: 0;">Bienvenido</h3>
+    <input type="email" id="email" placeholder="Correo electrónico">
+    <input type="password" id="pass" placeholder="Contraseña">
+    <button class="btn-main" onclick="handleAuth('login')">Entrar</button>
   </div>
 
-  <div id="p-perfil" class="hidden">
-    <div class="card" style="text-align:center">
-      <h1 id="pts">0</h1>
-      <p>Puntos Morales</p>
+  <div id="tab-perfil" class="tab-content hidden">
+    <div class="card" style="text-align: center; background: radial-gradient(circle at top, #1a2a1a 0%, #161616 100%);">
+      <h2 id="user-pts" style="font-size: 50px; margin: 0;">0</h2>
+      <p style="opacity: 0.5; font-size: 12px;">Puntos Acumulados</p>
     </div>
-    <div id="lista"></div>
-    <button onclick="logout()" style="color:#666; background:none; border:none; width:100%; margin-top:20px;">Cerrar Sesión</button>
+    <div class="card">
+      <h4 style="margin-top: 0;">Nueva Acción Social</h4>
+      <input type="text" id="act-name" placeholder="¿A quién ayudaste?">
+      <textarea id="act-desc" placeholder="Breve descripción..."></textarea>
+      <input type="file" id="act-file" accept="image/*">
+      <button class="btn-main" onclick="uploadAction()">Publicar Acción</button>
+    </div>
+    <div id="my-history"></div>
+    <button onclick="handleAuth('logout')" style="width:100%; background:none; border:none; color:#444; padding:20px;">Cerrar Sesión</button>
   </div>
 
-  <div id="p-donar" class="hidden">
-    <div class="card r-0">
-      <h3 style="margin:0; color:var(--gold)">🥇 TOP 1 GLOBAL</h3>
-      <p id="top1">Cargando...</p>
+  <div id="tab-muro" class="tab-content hidden">
+    <h3 style="text-align: center;">Muro de Impacto</h3>
+    <div id="global-feed"></div>
+  </div>
+
+  <div id="tab-donar" class="tab-content hidden">
+    <div class="card rank-gold" style="text-align: center; padding: 40px 20px;">
+      <h4 style="color:var(--gold); margin: 0;">FONDO GLOBAL</h4>
+      <h1 id="global-fund" style="font-size: 45px; margin: 10px 0;">$0.00</h1>
+      <input type="number" id="donate-amount" placeholder="Monto $" style="text-align: center; border-color: var(--gold); color: var(--gold);">
+      <button class="btn-main" style="background: var(--gold);" onclick="donate()">Contribuir ahora</button>
     </div>
-    <div id="ranking"></div>
+    <div class="card">
+      <h4 style="margin-top: 0;">🏆 Ranking de Honor</h4>
+      <div id="leaderboard"></div>
+    </div>
   </div>
 </div>
 
-<div id="menu" class="nav hidden">
-  <button onclick="tab('perfil')" style="color:#fff; background:none; border:none;">PERFIL</button>
-  <button onclick="tab('donar')" style="color:#fff; background:none; border:none;">RANKING</button>
-</div>
+<nav id="main-nav" class="nav hidden">
+  <button class="nav-btn active" onclick="switchTab('perfil')">PERFIL</button>
+  <button class="nav-btn" onclick="switchTab('muro')">MURO</button>
+  <button class="nav-btn" onclick="switchTab('donar')">DONAR</button>
+</nav>
 
 <script>
 const sb = supabase.createClient("https://dmlajgddeyfvwahswlvh.supabase.co", "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX");
 
-// EDICIÓN SIN ERRORES
-function edit(id, n, c) {
-  document.getElementById('modals').innerHTML = `
+// SISTEMA DE EDICIÓN MEJORADO
+function openEditor(id, n, c) {
+  document.getElementById('modal-layer').innerHTML = `
     <div class="modal">
-      <div class="card" style="width:80%">
-        <h3>Editar Acción</h3>
-        <input id="new-n" value="${n}">
-        <textarea id="new-c">${c}</textarea>
-        <button class="btn" onclick="save(${id})">GUARDAR</button>
-        <button onclick="document.getElementById('modals').innerHTML=''" style="background:none; border:none; color:#fff; width:100%; margin-top:10px;">Cancelar</button>
+      <div class="card" style="width: 85%;">
+        <h3 style="color:var(--p)">Editar Publicación</h3>
+        <input type="text" id="edit-n" value="${n}">
+        <textarea id="edit-c" rows="4">${c}</textarea>
+        <button class="btn-main" onclick="saveEdit(${id})">GUARDAR CAMBIOS</button>
+        <button onclick="document.getElementById('modal-layer').innerHTML=''" style="width:100%; background:none; border:none; color:#666; margin-top:15px;">Cancelar</button>
       </div>
     </div>`;
 }
 
-async function save(id) {
-  const n = document.getElementById('new-n').value;
-  const c = document.getElementById('new-c').value;
+async function saveEdit(id) {
+  const n = document.getElementById('edit-n').value;
+  const c = document.getElementById('edit-c').value;
   await sb.from('acciones').update({ nombre_ayudado: n, comentario: c }).eq('id', id);
-  document.getElementById('modals').innerHTML = '';
-  tab('perfil');
+  document.getElementById('modal-layer').innerHTML = '';
+  switchTab('perfil');
 }
 
-async function tab(t) {
-  document.getElementById('p-perfil').classList.add('hidden');
-  document.getElementById('p-donar').classList.add('hidden');
-  document.getElementById('p-' + t).classList.remove('hidden');
+// NAVEGACIÓN
+async function switchTab(t) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.remove('hidden');
+  event?.currentTarget?.classList.add('active');
 
-  if(t === 'perfil') {
-    const { data: { user } } = await sb.auth.getUser();
-    const { data: u } = await sb.from('usuarios').select('*').eq('id', user.id).single();
-    document.getElementById('pts').innerText = u.capital_total || 0;
-    
-    const { data: acts } = await sb.from('acciones').select('*').eq('usuario_id', user.id);
-    const div = document.getElementById('lista');
-    div.innerHTML = "<h4>Mis Acciones</h4>";
-    acts?.forEach(a => {
-      div.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center">
-        <span>${a.nombre_ayudado}</span>
-        <button class="btn-edit" onclick="edit(${a.id}, '${a.nombre_ayudado}', '${a.comentario}')">EDITAR</button>
-      </div>`;
-    });
+  if(t === 'perfil') renderPerfil();
+  if(t === 'muro') renderMuro();
+  if(t === 'donar') renderDonar();
+}
+
+async function renderPerfil() {
+  const { data: { user } } = await sb.auth.getUser();
+  const { data: u } = await sb.from('usuarios').select('*').eq('id', user.id).single();
+  document.getElementById('user-pts').innerText = u.capital_total || 0;
+  
+  const { data: acts } = await sb.from('acciones').select('*').eq('usuario_id', user.id).order('created_at', {ascending: false});
+  const hist = document.getElementById('my-history');
+  hist.innerHTML = "<h4>Mis publicaciones</h4>";
+  acts?.forEach(a => {
+    hist.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>${a.nombre_ayudado}</span>
+      <button class="btn-edit" onclick="openEditor(${a.id}, '${a.nombre_ayudado}', '${a.comentario}')">EDITAR</button>
+    </div>`;
+  });
+}
+
+async function renderMuro() {
+  const feed = document.getElementById('global-feed');
+  const { data: acts } = await sb.from('acciones').select('*').order('created_at', {ascending: false});
+  const { data: v } = await sb.from('validaciones').select('*');
+  
+  feed.innerHTML = "";
+  acts?.forEach(a => {
+    const numV = v?.filter(x => x.accion_id === a.id).length || 0;
+    feed.innerHTML += `<div class="card">
+      <p><b>${a.nombre_ayudado}</b>: ${a.comentario}</p>
+      ${a.foto_url ? `<img src="${a.foto_url}" class="img-wall">` : ''}
+      <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:var(--p)">Verificado por ${numV}/3</span>
+        <button class="btn-edit" style="font-size:10px" onclick="validateAction(${a.id})">VALIDAR</button>
+      </div>
+    </div>`;
+  });
+}
+
+async function renderDonar() {
+  const { data: f } = await sb.from('fondo_comunitario').select('*').eq('id', 1).single();
+  document.getElementById('global-fund').innerText = "$" + (f?.monto_total || 0);
+  
+  const { data: users } = await sb.from('usuarios').select('email, capital_total').order('capital_total', {ascending: false}).limit(5);
+  const lb = document.getElementById('leaderboard');
+  lb.innerHTML = "";
+  const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
+  users?.forEach((u, i) => {
+    lb.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; margin-bottom:10px; ${i==0?'border-color:var(--gold)':''}">
+      <span>${medals[i]} ${u.email.split('@')[0]}</span>
+      <b>${u.capital_total} pts</b>
+    </div>`;
+  });
+}
+
+// ACCIONES SUPABASE
+async function validateAction(id) {
+  const { data: { user } } = await sb.auth.getUser();
+  await sb.from('validaciones').insert([{ accion_id: id, usuario_id: user.id }]);
+  renderMuro();
+}
+
+async function donate() {
+  const m = parseFloat(document.getElementById('donate-amount').value);
+  if(!m) return;
+  const { data: f } = await sb.from('fondo_comunitario').select('*').eq('id', 1).single();
+  await sb.from('fondo_comunitario').update({ monto_total: (f.monto_total || 0) + m }).eq('id', 1);
+  renderDonar();
+}
+
+async function uploadAction() {
+  const n = document.getElementById('act-name').value;
+  const c = document.getElementById('act-desc').value;
+  const file = document.getElementById('act-file').files[0];
+  if(!n || !file) return alert("Nombre y foto obligatorios");
+  
+  const { data: { user } } = await sb.auth.getUser();
+  const path = `public/${user.id}_${Date.now()}.jpg`;
+  await sb.storage.from('pruebas').upload(path, file);
+  const { data: { publicUrl } } = sb.storage.from('pruebas').getPublicUrl(path);
+  
+  await sb.from('acciones').insert([{ usuario_id: user.id, nombre_ayudado: n, comentario: c, foto_url: publicUrl, puntos: 50 }]);
+  switchTab('perfil');
+}
+
+async function handleAuth(type) {
+  if(type === 'login') {
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('pass').value;
+    const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
+    if(error) alert(error.message); else location.reload();
+  } else {
+    await sb.auth.signOut();
+    location.reload();
   }
-
-  if(t === 'donar') {
-    const { data } = await sb.from('usuarios').select('email, capital_total').order('capital_total', { ascending: false }).limit(5);
-    const r = document.getElementById('ranking');
-    r.innerHTML = "";
-    data?.forEach((u, i) => {
-      if(i === 0) document.getElementById('top1').innerText = u.email.split('@')[0] + " con " + u.capital_total + " pts";
-      else r.innerHTML += `<div class="card">#${i+1} ${u.email.split('@')[0]} - ${u.capital_total} pts</div>`;
-    });
-  }
 }
-
-async function login() {
-  const email = document.getElementById('em').value;
-  const password = document.getElementById('pw').value;
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if(error) alert("Error: " + error.message); else location.reload();
-}
-
-async function logout() { await sb.auth.signOut(); location.reload(); }
 
 async function init() {
   const { data: { user } } = await sb.auth.getUser();
   if(user) {
-    document.getElementById('auth').classList.add('hidden');
-    document.getElementById('menu').classList.remove('hidden');
-    tab('perfil');
+    document.getElementById('section-auth').classList.add('hidden');
+    document.getElementById('main-nav').classList.remove('hidden');
+    switchTab('perfil');
   }
 }
 init();

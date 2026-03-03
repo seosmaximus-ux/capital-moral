@@ -10,41 +10,60 @@
 <h1>Capital Moral</h1>
 
 <div id="loginBox">
-<input type="email" id="email" placeholder="Tu email">
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="password" placeholder="Contraseña"><br><br>
 <button id="loginBtn">Entrar</button>
+<button id="registerBtn">Registrarse</button>
 </div>
 
 <div id="app" style="display:none;">
 <h2 id="userEmail"></h2>
 <h3>Puntos: <span id="points">0</span></h3>
 <button id="addBtn">Sumar 10</button>
+<button id="logoutBtn">Cerrar sesión</button>
 </div>
 
 <script>
 
-if (!window.mySupabaseClient) {
-  window.mySupabaseClient = window.supabase.createClient(
-    "https://mlxcjgywjhtodcjjeiuv.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
-  );
-}
-
-const client = window.mySupabaseClient;
+const supabase = window.supabase.createClient(
+  "https://mlxcjgywjhtodcjjeiuv.supabase.co",
+  "PEGA_AQUI_TU_ANON_PUBLIC_KEY_REAL"
+);
 
 let currentUser = null;
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
+document.getElementById("registerBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
-  const { error } = await client.auth.signInWithOtp({ email });
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabase.auth.signUp({
+    email: email,
+    password: password
+  });
+
   if(error) alert(error.message);
-  else alert("Revisá tu email para entrar.");
+  else alert("Usuario creado. Ahora podés iniciar sesión.");
 });
 
-client.auth.onAuthStateChange(async (event, session) => {
-  if(session){
-    currentUser = session.user;
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if(error) alert(error.message);
+  else {
+    currentUser = data.user;
     startApp();
   }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  location.reload();
 });
 
 async function startApp(){
@@ -55,14 +74,14 @@ async function startApp(){
 }
 
 async function loadData(){
-  const { data } = await client
+  const { data } = await supabase
   .from("capital")
   .select("*")
   .eq("user_id", currentUser.id)
   .single();
 
   if(!data){
-    await client.from("capital").insert({
+    await supabase.from("capital").insert({
       user_id: currentUser.id,
       points:0,
       history:[]
@@ -77,7 +96,7 @@ document.getElementById("addBtn").addEventListener("click", async ()=>{
   let current = parseInt(document.getElementById("points").innerText);
   current += 10;
 
-  await client.from("capital")
+  await supabase.from("capital")
   .update({ points: current })
   .eq("user_id", currentUser.id);
 
@@ -87,6 +106,3 @@ document.getElementById("addBtn").addEventListener("click", async ()=>{
 </script>
 </body>
 </html>
-
-
-

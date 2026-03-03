@@ -4,106 +4,238 @@
 <meta charset="UTF-8">
 <title>Capital Moral</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{
+  margin:0;
+  background:#0f0f0f;
+  color:#eaeaea;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.container{
+  max-width:500px;
+  margin:60px auto;
+  padding:20px;
+}
+.card{
+  background:#171717;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+input, button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+}
+input{
+  background:#222;
+  color:white;
+}
+button{
+  background:#2c2c2c;
+  color:white;
+  cursor:pointer;
+  transition:0.2s;
+}
+button:hover{
+  background:#3a3a3a;
+}
+.actions button{
+  width:48%;
+  display:inline-block;
+}
+.progress{
+  height:8px;
+  background:#222;
+  border-radius:10px;
+  margin-top:10px;
+}
+.progress-bar{
+  height:8px;
+  background:white;
+  width:0%;
+  border-radius:10px;
+  transition:0.4s;
+}
+.small{
+  font-size:12px;
+  opacity:0.6;
+}
+.history{
+  margin-top:20px;
+  font-size:13px;
+  max-height:150px;
+  overflow:auto;
+}
+.entry{
+  border-bottom:1px solid #222;
+  padding:6px 0;
+}
+</style>
 </head>
 
-<body style="background:black;color:white;text-align:center;font-family:Arial;padding:40px;">
+<body>
 
-<h1>Capital Moral</h1>
+<div class="container">
 
-<div id="loginBox">
-<input type="email" id="email" placeholder="Email"><br><br>
-<input type="password" id="password" placeholder="Contraseña"><br><br>
+<div class="card" id="loginBox">
+<h2>Capital Moral</h2>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Contraseña">
 <button id="registerBtn">Registrarse</button>
 <button id="loginBtn">Entrar</button>
 </div>
 
-<div id="app" style="display:none;">
-<h2 id="userEmail"></h2>
-<h3>Puntos: <span id="points">0</span></h3>
-<button id="addBtn">Sumar 10</button>
-<button id="logoutBtn">Cerrar sesión</button>
+<div class="card" id="app" style="display:none;">
+<div id="userEmail" class="small"></div>
+<h2 id="level"></h2>
+<h1 id="points">0</h1>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="actions">
+<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
+<button onclick="addAction('Lectura',15)">Lectura +15</button>
+<button onclick="addAction('Disciplina',25)">Disciplina +25</button>
+<button onclick="addAction('Ayuda',30)">Ayuda +30</button>
+</div>
+
+<input type="text" id="customAction" placeholder="Acción personalizada">
+<input type="number" id="customPoints" placeholder="Puntos">
+<button onclick="addCustom()">Agregar acción</button>
+
+<div class="history" id="history"></div>
+
+<button onclick="logout()">Cerrar sesión</button>
+</div>
+
 </div>
 
 <script>
 
-const capitalClient = window.supabase.createClient(
-  "https://mlxcjgywjhtodcjjeiuv.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+const client = window.supabase.createClient(
+"https://mlxcjgywjhtodcjjeiuv.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
 );
 
 let currentUser = null;
+let currentPoints = 0;
+let historyData = [];
 
-document.getElementById("registerBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+const levels = [
+{ name:"Principiante", min:0, max:99 },
+{ name:"Disciplinado", min:100, max:299 },
+{ name:"Ejemplar", min:300, max:699 },
+{ name:"Mentor", min:700, max:1499 },
+{ name:"Leyenda", min:1500, max:999999 }
+];
 
-  const { error } = await capitalClient.auth.signUp({
-    email: email,
-    password: password
-  });
+function getLevel(points){
+return levels.find(l => points >= l.min && points <= l.max);
+}
 
-  if(error) alert(error.message);
-  else alert("Usuario creado correctamente.");
+function updateUI(){
+document.getElementById("points").innerText=currentPoints;
+
+const level = getLevel(currentPoints);
+document.getElementById("level").innerText=level.name;
+
+const percent = ((currentPoints - level.min) / (level.max - level.min)) * 100;
+document.getElementById("progressBar").style.width=percent+"%";
+
+renderHistory();
+}
+
+function renderHistory(){
+let container=document.getElementById("history");
+container.innerHTML="";
+historyData.slice().reverse().forEach(entry=>{
+container.innerHTML+=`<div class="entry">${entry.accion} +${entry.puntos}</div>`;
+});
+}
+
+async function addAction(name,points){
+currentPoints += points;
+
+historyData.push({
+accion:name,
+puntos:points,
+fecha:new Date().toISOString()
 });
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+await saveData();
+updateUI();
+}
 
-  const { data, error } = await capitalClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+async function addCustom(){
+const name=document.getElementById("customAction").value;
+const points=parseInt(document.getElementById("customPoints").value);
+if(!name || !points) return;
 
-  if(error) {
-    alert(error.message);
-  } else {
-    currentUser = data.user;
-    startApp();
-  }
-});
+addAction(name,points);
 
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  await capitalClient.auth.signOut();
-  location.reload();
-});
+document.getElementById("customAction").value="";
+document.getElementById("customPoints").value="";
+}
 
-async function startApp(){
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("app").style.display="block";
-  document.getElementById("userEmail").innerText=currentUser.email;
-  await loadData();
+async function saveData(){
+await client.from("capital")
+.update({ points:currentPoints, history:historyData })
+.eq("user_id", currentUser.id);
 }
 
 async function loadData(){
-  const { data } = await capitalClient
-  .from("capital")
-  .select("*")
-  .eq("user_id", currentUser.id)
-  .single();
+const { data } = await client
+.from("capital")
+.select("*")
+.eq("user_id", currentUser.id)
+.single();
 
-  if(!data){
-    await capitalClient.from("capital").insert({
-      user_id: currentUser.id,
-      points:0,
-      history:[]
-    });
-    document.getElementById("points").innerText=0;
-  } else {
-    document.getElementById("points").innerText=data.points;
-  }
+if(!data){
+await client.from("capital").insert({
+user_id:currentUser.id,
+points:0,
+history:[]
+});
+} else {
+currentPoints=data.points;
+historyData=data.history || [];
 }
 
-document.getElementById("addBtn").addEventListener("click", async ()=>{
-  let current = parseInt(document.getElementById("points").innerText);
-  current += 10;
+updateUI();
+}
 
-  await capitalClient.from("capital")
-  .update({ points: current })
-  .eq("user_id", currentUser.id);
-
-  document.getElementById("points").innerText=current;
+document.getElementById("registerBtn").addEventListener("click", async ()=>{
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
+await client.auth.signUp({ email,password });
+alert("Usuario creado");
 });
+
+document.getElementById("loginBtn").addEventListener("click", async ()=>{
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
+
+const { data,error } = await client.auth.signInWithPassword({ email,password });
+if(error){ alert(error.message); return; }
+
+currentUser=data.user;
+startApp();
+});
+
+async function startApp(){
+document.getElementById("loginBox").style.display="none";
+document.getElementById("app").style.display="block";
+document.getElementById("userEmail").innerText=currentUser.email;
+await loadData();
+}
+
+async function logout(){
+await client.auth.signOut();
+location.reload();
+}
 
 </script>
 

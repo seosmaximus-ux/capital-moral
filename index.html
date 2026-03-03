@@ -2,13 +2,67 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Capital Moral</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#0a0a0a;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.card {
+  background:#161616;
+  padding:30px;
+  border-radius:20px;
+  width:320px;
+}
+input {
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:black;
+  color:white;
+}
+button {
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:#00ff88;
+  font-weight:bold;
+  cursor:pointer;
+}
+.small {
+  margin-top:10px;
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+}
+</style>
 </head>
 <body>
 
-<h1>Capital Moral</h1>
-<p id="estado">Cargando...</p>
+<div class="card" id="authCard">
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="pass" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+  <div class="small">Usa el usuario que ya creaste en Supabase</div>
+</div>
+
+<div class="card" id="userCard" style="display:none;">
+  <h2>Bienvenido</h2>
+  <p id="userEmail"></p>
+  <button onclick="logout()">Cerrar sesión</button>
+</div>
 
 <script>
 const _s = supabase.createClient(
@@ -16,16 +70,37 @@ const _s = supabase.createClient(
   "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
 );
 
-async function test() {
-  const { data, error } = await _s.auth.getSession();
+async function login() {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("pass").value;
+
+  const { error } = await _s.auth.signInWithPassword({
+    email: email,
+    password: pass
+  });
+
   if(error) {
-    document.getElementById("estado").innerText = "Error: " + error.message;
+    alert(error.message);
   } else {
-    document.getElementById("estado").innerText = "Supabase conectado correctamente";
+    checkUser();
   }
 }
 
-test();
+async function logout() {
+  await _s.auth.signOut();
+  location.reload();
+}
+
+async function checkUser() {
+  const { data } = await _s.auth.getUser();
+  if(data.user) {
+    document.getElementById("authCard").style.display = "none";
+    document.getElementById("userCard").style.display = "block";
+    document.getElementById("userEmail").innerText = data.user.email;
+  }
+}
+
+checkUser();
 </script>
 
 </body>

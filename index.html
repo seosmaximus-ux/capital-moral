@@ -5,78 +5,19 @@
 <title>Capital Moral</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{
-  margin:0;
-  background:#0f0f0f;
-  color:#eaeaea;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-}
-.container{
-  max-width:500px;
-  margin:60px auto;
-  padding:20px;
-}
-.card{
-  background:#171717;
-  padding:25px;
-  border-radius:12px;
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
-}
-input, button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  font-size:14px;
-}
-input{
-  background:#222;
-  color:white;
-}
-button{
-  background:#2c2c2c;
-  color:white;
-  cursor:pointer;
-  transition:0.2s;
-}
-button:hover{
-  background:#3a3a3a;
-}
-.actions button{
-  width:48%;
-  display:inline-block;
-}
-.progress{
-  height:8px;
-  background:#222;
-  border-radius:10px;
-  margin-top:10px;
-}
-.progress-bar{
-  height:8px;
-  background:white;
-  width:0%;
-  border-radius:10px;
-  transition:0.4s;
-}
-.small{
-  font-size:12px;
-  opacity:0.6;
-}
-.history{
-  margin-top:20px;
-  font-size:13px;
-  max-height:150px;
-  overflow:auto;
-}
-.entry{
-  border-bottom:1px solid #222;
-  padding:6px 0;
-}
+body{margin:0;background:#0f0f0f;color:#eaeaea;font-family:-apple-system;}
+.container{max-width:500px;margin:60px auto;padding:20px;}
+.card{background:#171717;padding:25px;border-radius:12px;}
+input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px;}
+input{background:#222;color:white;}
+button{background:#2c2c2c;color:white;cursor:pointer;}
+button:hover{background:#3a3a3a;}
+.entry{border-bottom:1px solid #222;padding:8px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+.small{font-size:11px;opacity:0.5;}
+.progress{height:6px;background:#222;border-radius:10px;margin-top:10px;}
+.progress-bar{height:6px;background:white;width:0%;border-radius:10px;}
 </style>
 </head>
-
 <body>
 
 <div class="container">
@@ -85,28 +26,24 @@ button:hover{
 <h2>Capital Moral</h2>
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Contraseña">
-<button id="registerBtn">Registrarse</button>
-<button id="loginBtn">Entrar</button>
+<button onclick="register()">Registrarse</button>
+<button onclick="login()">Entrar</button>
 </div>
 
 <div class="card" id="app" style="display:none;">
 <div id="userEmail" class="small"></div>
 <h2 id="level"></h2>
 <h1 id="points">0</h1>
-<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div class="progress"><div class="progress-bar" id="bar"></div></div>
 
-<div class="actions">
-<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
-<button onclick="addAction('Lectura',15)">Lectura +15</button>
-<button onclick="addAction('Disciplina',25)">Disciplina +25</button>
-<button onclick="addAction('Ayuda',30)">Ayuda +30</button>
-</div>
+<button onclick="quickAdd('Ejercicio',20)">Ejercicio +20</button>
+<button onclick="quickAdd('Lectura',15)">Lectura +15</button>
 
-<input type="text" id="customAction" placeholder="Acción personalizada">
-<input type="number" id="customPoints" placeholder="Puntos">
-<button onclick="addCustom()">Agregar acción</button>
+<input id="customName" placeholder="Acción personalizada">
+<input id="customPoints" type="number" placeholder="Puntos">
+<button onclick="customAdd()">Agregar</button>
 
-<div class="history" id="history"></div>
+<div id="history"></div>
 
 <button onclick="logout()">Cerrar sesión</button>
 </div>
@@ -120,116 +57,122 @@ const client = window.supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
 );
 
-let currentUser = null;
-let currentPoints = 0;
-let historyData = [];
+let user=null;
+let historyData=[];
 
-const levels = [
-{ name:"Principiante", min:0, max:99 },
-{ name:"Disciplinado", min:100, max:299 },
-{ name:"Ejemplar", min:300, max:699 },
-{ name:"Mentor", min:700, max:1499 },
-{ name:"Leyenda", min:1500, max:999999 }
+const levels=[
+{n:"Principiante",min:0,max:99},
+{n:"Disciplinado",min:100,max:299},
+{n:"Ejemplar",min:300,max:699},
+{n:"Mentor",min:700,max:1499},
+{n:"Leyenda",min:1500,max:999999}
 ];
 
-function getLevel(points){
-return levels.find(l => points >= l.min && points <= l.max);
+function calcPoints(){
+return historyData.reduce((sum,e)=>sum+e.puntos,0);
 }
 
 function updateUI(){
-document.getElementById("points").innerText=currentPoints;
+let total=calcPoints();
+document.getElementById("points").innerText=total;
 
-const level = getLevel(currentPoints);
-document.getElementById("level").innerText=level.name;
+let lvl=levels.find(l=>total>=l.min && total<=l.max);
+document.getElementById("level").innerText=lvl.n;
 
-const percent = ((currentPoints - level.min) / (level.max - level.min)) * 100;
-document.getElementById("progressBar").style.width=percent+"%";
+let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
+document.getElementById("bar").style.width=percent+"%";
 
 renderHistory();
 }
 
 function renderHistory(){
-let container=document.getElementById("history");
-container.innerHTML="";
-historyData.slice().reverse().forEach(entry=>{
-container.innerHTML+=`<div class="entry">${entry.accion} +${entry.puntos}</div>`;
+let div=document.getElementById("history");
+div.innerHTML="";
+historyData.slice().reverse().forEach(e=>{
+div.innerHTML+=`
+<div class="entry">
+<span onclick="editEntry('${e.id}')">${e.accion} +${e.puntos}</span>
+<button onclick="deleteEntry('${e.id}')">X</button>
+</div>`;
 });
 }
 
-async function addAction(name,points){
-currentPoints += points;
-
+function quickAdd(name,points){
 historyData.push({
+id:crypto.randomUUID(),
 accion:name,
 puntos:points,
 fecha:new Date().toISOString()
 });
-
-await saveData();
-updateUI();
+save();
 }
 
-async function addCustom(){
-const name=document.getElementById("customAction").value;
-const points=parseInt(document.getElementById("customPoints").value);
-if(!name || !points) return;
-
-addAction(name,points);
-
-document.getElementById("customAction").value="";
+function customAdd(){
+let n=document.getElementById("customName").value;
+let p=parseInt(document.getElementById("customPoints").value);
+if(!n || !p) return;
+quickAdd(n,p);
+document.getElementById("customName").value="";
 document.getElementById("customPoints").value="";
 }
 
-async function saveData(){
+function deleteEntry(id){
+historyData=historyData.filter(e=>e.id!==id);
+save();
+}
+
+function editEntry(id){
+let entry=historyData.find(e=>e.id===id);
+let newPoints=parseInt(prompt("Modificar puntos:",entry.puntos));
+if(!isNaN(newPoints)){
+entry.puntos=newPoints;
+save();
+}
+}
+
+async function save(){
 await client.from("capital")
-.update({ points:currentPoints, history:historyData })
-.eq("user_id", currentUser.id);
-}
-
-async function loadData(){
-const { data } = await client
-.from("capital")
-.select("*")
-.eq("user_id", currentUser.id)
-.single();
-
-if(!data){
-await client.from("capital").insert({
-user_id:currentUser.id,
-points:0,
-history:[]
-});
-} else {
-currentPoints=data.points;
-historyData=data.history || [];
-}
-
+.update({history:historyData})
+.eq("user_id",user.id);
 updateUI();
 }
 
-document.getElementById("registerBtn").addEventListener("click", async ()=>{
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
-await client.auth.signUp({ email,password });
+async function load(){
+const {data}=await client.from("capital")
+.select("*")
+.eq("user_id",user.id)
+.single();
+
+if(!data){
+await client.from("capital").insert({user_id:user.id,history:[]});
+historyData=[];
+}else{
+historyData=data.history||[];
+}
+updateUI();
+}
+
+async function register(){
+let email=document.getElementById("email").value;
+let password=document.getElementById("password").value;
+await client.auth.signUp({email,password});
 alert("Usuario creado");
-});
+}
 
-document.getElementById("loginBtn").addEventListener("click", async ()=>{
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
+async function login(){
+let email=document.getElementById("email").value;
+let password=document.getElementById("password").value;
+const {data,error}=await client.auth.signInWithPassword({email,password});
+if(error){alert(error.message);return;}
+user=data.user;
+start();
+}
 
-const { data,error } = await client.auth.signInWithPassword({ email,password });
-if(error){ alert(error.message); return; }
-
-currentUser=data.user;
-startApp();
-});
-
-async function startApp(){
+async function start(){
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
-document.getElementById("userEmail").innerText=currentUser.email;
-await loadData();
+document.getElementById("userEmail").innerText=user.email;
+await load();
 }
 
 async function logout(){
@@ -238,6 +181,5 @@ location.reload();
 }
 
 </script>
-
 </body>
 </html>

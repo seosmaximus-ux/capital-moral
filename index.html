@@ -22,13 +22,11 @@ body{
   color:var(--text);
 }
 
-/* Layout general */
 .app{
   display:flex;
   min-height:100vh;
 }
 
-/* Sidebar desktop */
 .sidebar{
   width:240px;
   background:#111;
@@ -56,7 +54,6 @@ body{
   color:var(--accent);
 }
 
-/* Contenido */
 .content{
   flex:1;
   padding:30px;
@@ -85,7 +82,6 @@ button.main{
   cursor:pointer;
 }
 
-/* Bottom nav móvil */
 .mobile-nav{
   position:fixed;
   bottom:0;
@@ -109,7 +105,27 @@ button.main{
   color:var(--accent);
 }
 
-/* Responsive */
+.progress-bar{
+  height:10px;
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress-fill{
+  height:100%;
+  background:var(--accent);
+  width:0%;
+  transition:width .6s ease;
+}
+
+.level-badge{
+  font-weight:bold;
+  color:var(--accent);
+  margin-top:10px;
+}
+
 @media(min-width:900px){
   .sidebar{
     display:flex;
@@ -152,6 +168,13 @@ button.main{
       <div class="card">
         <h2>Mi Capital</h2>
         <h1 id="capitalTotal">0</h1>
+        <div class="level-badge" id="levelBadge"></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+      <div class="card">
+        <button class="main" onclick="sumarPuntos(50)">+50 Acción Buena</button>
       </div>
     </div>
 
@@ -165,7 +188,7 @@ button.main{
   </div>
 </div>
 
-<div class="mobile-nav" id="mobileNav" style="display:none;">
+<div class="mobile-nav">
   <button onclick="showTab('perfil')" id="m-perfil">Perfil</button>
   <button onclick="showTab('ranking')" id="m-ranking">Ranking</button>
 </div>
@@ -175,6 +198,77 @@ const _s = supabase.createClient(
   "https://dmlajgddeyfvwahswlvh.supabase.co",
   "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
 );
+
+let currentCapital = 0;
+
+function calcularNivel(puntos){
+  const nivel = Math.floor(puntos / 500);
+  const progreso = (puntos % 500) / 500 * 100;
+  return { nivel, progreso };
+}
+
+function actualizarUI(){
+  document.getElementById("capitalTotal").innerText = currentCapital;
+
+  const { nivel, progreso } = calcularNivel(currentCapital);
+
+  document.getElementById("levelBadge").innerText = "Nivel " + nivel;
+  document.getElementById("progressFill").style.width = progreso + "%";
+}
+
+async function sumarPuntos(cantidad){
+  const { data } = await _s.auth.getUser();
+  const user = data.user;
+
+  if(!user) return;
+
+  const { data:usuario } = await _s
+    .from("usuarios")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  const nuevoTotal = (usuario.capital_total || 0) + cantidad;
+
+  await _s
+    .from("usuarios")
+    .update({ capital_total: nuevoTotal })
+    .eq("id", user.id);
+
+  currentCapital = nuevoTotal;
+  actualizarUI();
+  loadRanking();
+}
+
+function showTab(tab){
+  document.getElementById("tab-perfil").style.display="none";
+  document.getElementById("tab-ranking").style.display="none";
+  document.getElementById("tab-"+tab).style.display="block";
+
+  document.querySelectorAll(".sidebar button, .mobile-nav button")
+    .forEach(b=>b.classList.remove("active"));
+
+  const desktopBtn = document.getElementById("btn-"+tab);
+  const mobileBtn = document.getElementById("m-"+tab);
+
+  if(desktopBtn) desktopBtn.classList.add("active");
+  if(mobileBtn) mobileBtn.classList.add("active");
+}
+
+async function loadRanking(){
+  const { data } = await _s
+    .from("usuarios")
+    .select("email, capital_total")
+    .order("capital_total",{ascending:false})
+    .limit(10);
+
+  const list = document.getElementById("rankingList");
+  list.innerHTML="";
+
+  data?.forEach((u,i)=>{
+    list.innerHTML += `<p>${i+1}. ${u.email.split("@")[0]} — ${u.capital_total || 0}</p>`;
+  });
+}
 
 async function login(){
   const email = document.getElementById("email").value;
@@ -194,45 +288,24 @@ async function logout(){
   location.reload();
 }
 
-function showTab(tab){
-  document.getElementById("tab-perfil").style.display="none";
-  document.getElementById("tab-ranking").style.display="none";
-
-  document.getElementById("tab-"+tab).style.display="block";
-
-  document.querySelectorAll(".sidebar button, .mobile-nav button").forEach(b=>b.classList.remove("active"));
-
-  const desktopBtn = document.getElementById("btn-"+tab);
-  const mobileBtn = document.getElementById("m-"+tab);
-
-  if(desktopBtn) desktopBtn.classList.add("active");
-  if(mobileBtn) mobileBtn.classList.add("active");
-}
-
-async function loadRanking(){
-  const { data } = await _s.from("usuarios")
-    .select("email, capital_total")
-    .order("capital_total",{ascending:false})
-    .limit(10);
-
-  const list = document.getElementById("rankingList");
-  list.innerHTML="";
-
-  data?.forEach((u,i)=>{
-    list.innerHTML += `<p>${i+1}. ${u.email.split("@")[0]} — ${u.capital_total || 0}</p>`;
-  });
-}
-
 async function init(){
   const { data } = await _s.auth.getUser();
 
   if(data.user){
     document.getElementById("authScreen").style.display="none";
     document.getElementById("app").style.display="flex";
-    document.getElementById("mobileNav").style.display="flex";
 
     document.getElementById("userEmail").innerText = data.user.email;
 
+    const { data:usuario } = await _s
+      .from("usuarios")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    currentCapital = usuario?.capital_total || 0;
+
+    actualizarUI();
     loadRanking();
     showTab("perfil");
   }

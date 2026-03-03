@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Capital Moral</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background:black;color:white;text-align:center;font-family:Arial;padding:40px;">
+
+<h1>Capital Moral</h1>
+
+<div id="loginBox">
+<input type="email" id="email" placeholder="Tu email">
+<button id="loginBtn">Entrar</button>
+</div>
+
+<div id="app" style="display:none;">
+<h2 id="userEmail"></h2>
+<h3>Puntos: <span id="points">0</span></h3>
+<button id="addBtn">Sumar 10</button>
+</div>
+
+<script>
+
+const supabase = window.supabase.createClient(
+  "TU_PROJECT_URL",
+  "TU_ANON_PUBLIC_KEY"
+);
+
+let currentUser = null;
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const { error } = await supabase.auth.signInWithOtp({ email });
+  if(error) alert(error.message);
+  else alert("Revisá tu email para entrar.");
+});
+
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if(session){
+    currentUser = session.user;
+    startApp();
+  }
+});
+
+async function startApp(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("userEmail").innerText=currentUser.email;
+  await loadData();
+}
+
+async function loadData(){
+  const { data } = await supabase
+  .from("capital")
+  .select("*")
+  .eq("user_id", currentUser.id)
+  .single();
+
+  if(!data){
+    await supabase.from("capital").insert({
+      user_id: currentUser.id,
+      points:0,
+      history:[]
+    });
+    document.getElementById("points").innerText=0;
+  } else {
+    document.getElementById("points").innerText=data.points;
+  }
+}
+
+document.getElementById("addBtn").addEventListener("click", async ()=>{
+  let current = parseInt(document.getElementById("points").innerText);
+  current += 10;
+
+  await supabase.from("capital")
+  .update({ points: current })
+  .eq("user_id", currentUser.id);
+
+  document.getElementById("points").innerText=current;
+});
+
+</script>
+</body>
+</html>

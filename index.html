@@ -2,9 +2,31 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Test</title>
+<title>Capital Moral</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<h1>Funciona</h1>
+
+<h1>Capital Moral</h1>
+<p id="estado">Cargando...</p>
+
+<script>
+const _s = supabase.createClient(
+  "https://dmlajgddeyfvwahswlvh.supabase.co",
+  "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
+);
+
+async function test() {
+  const { data, error } = await _s.auth.getSession();
+  if(error) {
+    document.getElementById("estado").innerText = "Error: " + error.message;
+  } else {
+    document.getElementById("estado").innerText = "Supabase conectado correctamente";
+  }
+}
+
+test();
+</script>
+
 </body>
 </html>

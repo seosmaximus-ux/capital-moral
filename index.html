@@ -8,307 +8,362 @@
 
 <style>
 :root{
-  --bg:#0a0a0a;
-  --card:#161616;
-  --accent:#00ff88;
-  --text:#ffffff;
-  --muted:#777;
+--bg:#0a0a0a;
+--card:#161616;
+--accent:#00ff88;
+--danger:#ff4444;
+--text:#fff;
 }
 
 body{
-  margin:0;
-  font-family:sans-serif;
-  background:var(--bg);
-  color:var(--text);
+margin:0;
+font-family:sans-serif;
+background:var(--bg);
+color:var(--text);
 }
 
-.app{
-  display:flex;
-  min-height:100vh;
-}
+.app{display:flex;min-height:100vh;}
 
 .sidebar{
-  width:240px;
-  background:#111;
-  padding:20px;
-  display:none;
-  flex-direction:column;
-  border-right:1px solid #222;
+width:240px;
+background:#111;
+padding:20px;
+display:none;
+flex-direction:column;
+border-right:1px solid #222;
 }
 
-.sidebar h2{
-  color:var(--accent);
-}
-
+.sidebar h2{color:var(--accent);}
 .sidebar button{
-  background:none;
-  border:none;
-  color:#aaa;
-  padding:10px 0;
-  text-align:left;
-  cursor:pointer;
-  font-weight:bold;
+background:none;border:none;color:#aaa;
+padding:10px 0;text-align:left;cursor:pointer;font-weight:bold;
 }
+.sidebar button.active{color:var(--accent);}
 
-.sidebar button.active{
-  color:var(--accent);
-}
-
-.content{
-  flex:1;
-  padding:30px;
-}
+.content{flex:1;padding:30px;}
 
 .topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:30px;
+display:flex;justify-content:space-between;
+align-items:center;margin-bottom:20px;
 }
 
 .card{
-  background:var(--card);
-  padding:20px;
-  border-radius:20px;
-  margin-bottom:20px;
+background:var(--card);
+padding:20px;
+border-radius:20px;
+margin-bottom:20px;
 }
 
 button.main{
-  background:var(--accent);
-  border:none;
-  padding:12px 20px;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
+background:var(--accent);
+border:none;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+}
+
+button.danger{
+background:var(--danger);
 }
 
 .mobile-nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  background:#111;
-  display:flex;
-  justify-content:space-around;
-  padding:15px 0;
-  border-top:1px solid #222;
+position:fixed;bottom:0;left:0;width:100%;
+background:#111;display:flex;
+justify-content:space-around;padding:15px 0;
+border-top:1px solid #222;
 }
 
 .mobile-nav button{
-  background:none;
-  border:none;
-  color:#777;
-  font-weight:bold;
+background:none;border:none;color:#777;font-weight:bold;
 }
-
-.mobile-nav button.active{
-  color:var(--accent);
-}
+.mobile-nav button.active{color:var(--accent);}
 
 .progress-bar{
-  height:10px;
-  background:#222;
-  border-radius:10px;
-  overflow:hidden;
-  margin-top:10px;
+height:10px;background:#222;border-radius:10px;
+overflow:hidden;margin-top:10px;
 }
-
 .progress-fill{
-  height:100%;
-  background:var(--accent);
-  width:0%;
-  transition:width .6s ease;
+height:100%;background:var(--accent);
+width:0%;transition:width .6s ease;
 }
 
-.level-badge{
-  font-weight:bold;
-  color:var(--accent);
-  margin-top:10px;
+.action-img{
+width:100%;border-radius:10px;margin-top:10px;
+}
+
+select,input,textarea{
+width:100%;padding:10px;margin-bottom:10px;
+background:#000;border:1px solid #333;color:#fff;
+border-radius:10px;
 }
 
 @media(min-width:900px){
-  .sidebar{
-    display:flex;
-  }
-  .mobile-nav{
-    display:none;
-  }
+.sidebar{display:flex;}
+.mobile-nav{display:none;}
 }
 </style>
 </head>
 <body>
 
-<div id="authScreen" style="display:flex; justify-content:center; align-items:center; height:100vh;">
-  <div class="card" style="width:320px;">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px;">
-    <input type="password" id="pass" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:10px;">
-    <button class="main" onclick="login()" style="width:100%;">Entrar</button>
-  </div>
+<div id="authScreen" style="display:flex;justify-content:center;align-items:center;height:100vh;">
+<div class="card" style="width:320px;">
+<h2>Login</h2>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="pass" placeholder="Contraseña">
+<button class="main" onclick="login()" style="width:100%;">Entrar</button>
+</div>
 </div>
 
 <div class="app" id="app" style="display:none;">
 
-  <div class="sidebar">
-    <h2>Capital Moral</h2>
-    <button onclick="showTab('perfil')" id="btn-perfil">Perfil</button>
-    <button onclick="showTab('ranking')" id="btn-ranking">Ranking</button>
-    <button onclick="logout()">Cerrar sesión</button>
-  </div>
+<div class="sidebar">
+<h2>Capital Moral</h2>
+<button onclick="showTab('perfil')" id="btn-perfil">Perfil</button>
+<button onclick="showTab('muro')" id="btn-muro">Muro</button>
+<button onclick="showTab('ranking')" id="btn-ranking">Ranking</button>
+<button onclick="logout()">Cerrar sesión</button>
+</div>
 
-  <div class="content">
-    <div class="topbar">
-      <div>
-        <h3 id="userEmail"></h3>
-      </div>
-      <button onclick="logout()">Salir</button>
-    </div>
+<div class="content">
 
-    <div id="tab-perfil">
-      <div class="card">
-        <h2>Mi Capital</h2>
-        <h1 id="capitalTotal">0</h1>
-        <div class="level-badge" id="levelBadge"></div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-      </div>
-      <div class="card">
-        <button class="main" onclick="sumarPuntos(50)">+50 Acción Buena</button>
-      </div>
-    </div>
+<div class="topbar">
+<h3 id="userEmail"></h3>
+<button onclick="logout()">Salir</button>
+</div>
 
-    <div id="tab-ranking" style="display:none;">
-      <div class="card">
-        <h2>Ranking Público</h2>
-        <div id="rankingList"></div>
-      </div>
-    </div>
+<div id="tab-perfil">
 
-  </div>
+<div class="card">
+<h2>Mi Capital</h2>
+<h1 id="capitalTotal">0</h1>
+<div id="nivel"></div>
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+</div>
+
+<div class="card">
+<h3>Nueva Acción</h3>
+
+<select id="categoria">
+<option value="">Seleccionar categoría</option>
+<option value="Ayuda">Ayudé a alguien</option>
+<option value="Ejercicio">Me ejercité</option>
+<option value="Lectura">Leí</option>
+<option value="Disciplina">Mantuve calorías</option>
+</select>
+
+<textarea id="descripcion" placeholder="Descripción..."></textarea>
+<input type="file" id="foto" accept="image/*">
+<button class="main" onclick="subirAccion()">Publicar</button>
+</div>
+
+<div class="card">
+<h3>Historial</h3>
+<div id="historial"></div>
+</div>
+
+</div>
+
+<div id="tab-muro" style="display:none;">
+<div id="feed"></div>
+</div>
+
+<div id="tab-ranking" style="display:none;">
+<div class="card">
+<h2>Ranking Público</h2>
+<div id="rankingList"></div>
+</div>
+</div>
+
+</div>
 </div>
 
 <div class="mobile-nav">
-  <button onclick="showTab('perfil')" id="m-perfil">Perfil</button>
-  <button onclick="showTab('ranking')" id="m-ranking">Ranking</button>
+<button onclick="showTab('perfil')" id="m-perfil">Perfil</button>
+<button onclick="showTab('muro')" id="m-muro">Muro</button>
+<button onclick="showTab('ranking')" id="m-ranking">Ranking</button>
 </div>
 
 <script>
 const _s = supabase.createClient(
-  "https://dmlajgddeyfvwahswlvh.supabase.co",
-  "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
+"https://dmlajgddeyfvwahswlvh.supabase.co",
+"sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
 );
 
-let currentCapital = 0;
+let currentUser;
+let currentCapital=0;
 
-function calcularNivel(puntos){
-  const nivel = Math.floor(puntos / 500);
-  const progreso = (puntos % 500) / 500 * 100;
-  return { nivel, progreso };
+function calcularNivel(p){
+const nivel=Math.floor(p/500);
+const progreso=(p%500)/500*100;
+return {nivel,progreso};
 }
 
 function actualizarUI(){
-  document.getElementById("capitalTotal").innerText = currentCapital;
-
-  const { nivel, progreso } = calcularNivel(currentCapital);
-
-  document.getElementById("levelBadge").innerText = "Nivel " + nivel;
-  document.getElementById("progressFill").style.width = progreso + "%";
+document.getElementById("capitalTotal").innerText=currentCapital;
+const {nivel,progreso}=calcularNivel(currentCapital);
+document.getElementById("nivel").innerText="Nivel "+nivel;
+document.getElementById("progressFill").style.width=progreso+"%";
 }
 
-async function sumarPuntos(cantidad){
-  const { data } = await _s.auth.getUser();
-  const user = data.user;
+async function subirAccion(){
+const categoria=document.getElementById("categoria").value;
+const descripcion=document.getElementById("descripcion").value;
+const file=document.getElementById("foto").files[0];
 
-  if(!user) return;
+if(!categoria || !file) return alert("Faltan datos");
 
-  const { data:usuario } = await _s
-    .from("usuarios")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+const path=`acciones/${currentUser.id}_${Date.now()}.jpg`;
 
-  const nuevoTotal = (usuario.capital_total || 0) + cantidad;
+await _s.storage.from("pruebas").upload(path,file);
 
-  await _s
-    .from("usuarios")
-    .update({ capital_total: nuevoTotal })
-    .eq("id", user.id);
+const {data:{publicUrl}}=_s.storage.from("pruebas").getPublicUrl(path);
 
-  currentCapital = nuevoTotal;
-  actualizarUI();
-  loadRanking();
+await _s.from("acciones").insert([{
+usuario_id:currentUser.id,
+categoria,
+descripcion,
+foto_url:publicUrl,
+puntos:50
+}]);
+
+await _s.from("usuarios")
+.update({capital_total:currentCapital+50})
+.eq("id",currentUser.id);
+
+currentCapital+=50;
+actualizarUI();
+loadHistorial();
+loadFeed();
+loadRanking();
 }
 
-function showTab(tab){
-  document.getElementById("tab-perfil").style.display="none";
-  document.getElementById("tab-ranking").style.display="none";
-  document.getElementById("tab-"+tab).style.display="block";
+async function penalizar(){
+await _s.from("usuarios")
+.update({capital_total:currentCapital-50})
+.eq("id",currentUser.id);
 
-  document.querySelectorAll(".sidebar button, .mobile-nav button")
-    .forEach(b=>b.classList.remove("active"));
+currentCapital-=50;
+actualizarUI();
+loadRanking();
+}
 
-  const desktopBtn = document.getElementById("btn-"+tab);
-  const mobileBtn = document.getElementById("m-"+tab);
+async function loadHistorial(){
+const {data}=await _s.from("acciones")
+.select("*")
+.eq("usuario_id",currentUser.id)
+.order("created_at",{ascending:false});
 
-  if(desktopBtn) desktopBtn.classList.add("active");
-  if(mobileBtn) mobileBtn.classList.add("active");
+const h=document.getElementById("historial");
+h.innerHTML="";
+data?.forEach(a=>{
+h.innerHTML+=`
+<div class="card">
+<b>${a.categoria}</b>
+<p>${a.descripcion||""}</p>
+<img src="${a.foto_url}" class="action-img">
+<button class="danger" onclick="penalizar()">Penalizar -50</button>
+</div>`;
+});
+}
+
+async function loadFeed(){
+const {data}=await _s.from("acciones")
+.select("*")
+.order("created_at",{ascending:false})
+.limit(20);
+
+const f=document.getElementById("feed");
+f.innerHTML="";
+data?.forEach(a=>{
+f.innerHTML+=`
+<div class="card">
+<b>${a.categoria}</b>
+<p>${a.descripcion||""}</p>
+<img src="${a.foto_url}" class="action-img">
+<button onclick="validar(${a.id})">Validar</button>
+</div>`;
+});
+}
+
+async function validar(id){
+await _s.from("validaciones").insert([{
+accion_id:id,
+usuario_id:currentUser.id
+}]);
+alert("Validado");
 }
 
 async function loadRanking(){
-  const { data } = await _s
-    .from("usuarios")
-    .select("email, capital_total")
-    .order("capital_total",{ascending:false})
-    .limit(10);
+const {data}=await _s.from("usuarios")
+.select("email,capital_total")
+.order("capital_total",{ascending:false})
+.limit(10);
 
-  const list = document.getElementById("rankingList");
-  list.innerHTML="";
+const r=document.getElementById("rankingList");
+r.innerHTML="";
+data?.forEach((u,i)=>{
+r.innerHTML+=`<p>${i+1}. ${u.email.split("@")[0]} — ${u.capital_total||0}</p>`;
+});
+}
 
-  data?.forEach((u,i)=>{
-    list.innerHTML += `<p>${i+1}. ${u.email.split("@")[0]} — ${u.capital_total || 0}</p>`;
-  });
+function showTab(t){
+document.getElementById("tab-perfil").style.display="none";
+document.getElementById("tab-muro").style.display="none";
+document.getElementById("tab-ranking").style.display="none";
+document.getElementById("tab-"+t).style.display="block";
+
+document.querySelectorAll(".sidebar button,.mobile-nav button")
+.forEach(b=>b.classList.remove("active"));
+
+const d=document.getElementById("btn-"+t);
+const m=document.getElementById("m-"+t);
+if(d)d.classList.add("active");
+if(m)m.classList.add("active");
 }
 
 async function login(){
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("pass").value;
-
-  const { error } = await _s.auth.signInWithPassword({ email, password:pass });
-
-  if(error){
-    alert(error.message);
-  }else{
-    init();
-  }
+const email=document.getElementById("email").value;
+const pass=document.getElementById("pass").value;
+const {error}=await _s.auth.signInWithPassword({email,password:pass});
+if(error)alert(error.message);else init();
 }
 
 async function logout(){
-  await _s.auth.signOut();
-  location.reload();
+await _s.auth.signOut();
+location.reload();
 }
 
 async function init(){
-  const { data } = await _s.auth.getUser();
+const {data}=await _s.auth.getUser();
+if(data.user){
+currentUser=data.user;
+document.getElementById("authScreen").style.display="none";
+document.getElementById("app").style.display="flex";
+document.getElementById("userEmail").innerText=currentUser.email;
 
-  if(data.user){
-    document.getElementById("authScreen").style.display="none";
-    document.getElementById("app").style.display="flex";
+let {data:usuario}=await _s.from("usuarios")
+.select("*").eq("id",currentUser.id).single();
 
-    document.getElementById("userEmail").innerText = data.user.email;
+if(!usuario){
+await _s.from("usuarios").insert([{
+id:currentUser.id,
+email:currentUser.email,
+capital_total:0
+}]);
+currentCapital=0;
+}else{
+currentCapital=usuario.capital_total||0;
+}
 
-    const { data:usuario } = await _s
-      .from("usuarios")
-      .select("*")
-      .eq("id", data.user.id)
-      .single();
-
-    currentCapital = usuario?.capital_total || 0;
-
-    actualizarUI();
-    loadRanking();
-    showTab("perfil");
-  }
+actualizarUI();
+loadHistorial();
+loadFeed();
+loadRanking();
+showTab("perfil");
+}
 }
 
 init();

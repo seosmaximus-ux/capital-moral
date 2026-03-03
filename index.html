@@ -4,369 +4,240 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Capital Moral</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{
---bg:#0a0a0a;
---card:#161616;
---accent:#00ff88;
---danger:#ff4444;
---text:#fff;
-}
-
 body{
-margin:0;
-font-family:sans-serif;
-background:var(--bg);
-color:var(--text);
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0d0d0d;
+  color:white;
+  text-align:center;
 }
 
-.app{display:flex;min-height:100vh;}
-
-.sidebar{
-width:240px;
-background:#111;
-padding:20px;
-display:none;
-flex-direction:column;
-border-right:1px solid #222;
-}
-
-.sidebar h2{color:var(--accent);}
-.sidebar button{
-background:none;border:none;color:#aaa;
-padding:10px 0;text-align:left;cursor:pointer;font-weight:bold;
-}
-.sidebar button.active{color:var(--accent);}
-
-.content{flex:1;padding:30px;}
-
-.topbar{
-display:flex;justify-content:space-between;
-align-items:center;margin-bottom:20px;
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
 }
 
 .card{
-background:var(--card);
-padding:20px;
-border-radius:20px;
-margin-bottom:20px;
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:15px;
+  margin-top:20px;
 }
 
-button.main{
-background:var(--accent);
-border:none;
-padding:12px 20px;
-border-radius:10px;
-font-weight:bold;
-cursor:pointer;
+input, button, select{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
 }
 
-button.danger{
-background:var(--danger);
+button{
+  background:#ffffff;
+  color:black;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s;
 }
 
-.mobile-nav{
-position:fixed;bottom:0;left:0;width:100%;
-background:#111;display:flex;
-justify-content:space-around;padding:15px 0;
-border-top:1px solid #222;
+button:hover{
+  opacity:0.8;
 }
 
-.mobile-nav button{
-background:none;border:none;color:#777;font-weight:bold;
-}
-.mobile-nav button.active{color:var(--accent);}
-
-.progress-bar{
-height:10px;background:#222;border-radius:10px;
-overflow:hidden;margin-top:10px;
-}
-.progress-fill{
-height:100%;background:var(--accent);
-width:0%;transition:width .6s ease;
+.hidden{
+  display:none;
 }
 
-.action-img{
-width:100%;border-radius:10px;margin-top:10px;
+#capital{
+  font-size:40px;
+  margin:10px 0;
 }
 
-select,input,textarea{
-width:100%;padding:10px;margin-bottom:10px;
-background:#000;border:1px solid #333;color:#fff;
-border-radius:10px;
+.level-bar{
+  background:#333;
+  border-radius:10px;
+  height:20px;
+  overflow:hidden;
+  margin-top:10px;
 }
 
-@media(min-width:900px){
-.sidebar{display:flex;}
-.mobile-nav{display:none;}
+.level-fill{
+  background:#00ff88;
+  height:100%;
+  width:0%;
+  transition:0.5s ease;
+}
+
+.action-btn{
+  background:#2a2a2a;
+  color:white;
+}
+
+.action-btn:hover{
+  background:#444;
+}
+
+.history{
+  text-align:left;
+  margin-top:15px;
+  font-size:14px;
+  max-height:150px;
+  overflow:auto;
 }
 </style>
 </head>
+
 <body>
 
-<div id="authScreen" style="display:flex;justify-content:center;align-items:center;height:100vh;">
-<div class="card" style="width:320px;">
-<h2>Login</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="pass" placeholder="Contraseña">
-<button class="main" onclick="login()" style="width:100%;">Entrar</button>
-</div>
-</div>
+<div class="container">
 
-<div class="app" id="app" style="display:none;">
+<h1>Capital Moral</h1>
 
-<div class="sidebar">
-<h2>Capital Moral</h2>
-<button onclick="showTab('perfil')" id="btn-perfil">Perfil</button>
-<button onclick="showTab('muro')" id="btn-muro">Muro</button>
-<button onclick="showTab('ranking')" id="btn-ranking">Ranking</button>
-<button onclick="logout()">Cerrar sesión</button>
+<div id="loginBox" class="card">
+  <input type="email" id="email" placeholder="Tu email">
+  <button onclick="login()">Iniciar sesión / Registrarse</button>
 </div>
 
-<div class="content">
+<div id="app" class="hidden">
 
-<div class="topbar">
-<h3 id="userEmail"></h3>
-<button onclick="logout()">Salir</button>
-</div>
+  <div class="card">
+    <div id="userEmail"></div>
+    <h2>Mi Capital</h2>
+    <div id="capital">0</div>
+    <div>Nivel <span id="level">1</span></div>
+    <div class="level-bar">
+      <div class="level-fill" id="levelFill"></div>
+    </div>
+  </div>
 
-<div id="tab-perfil">
+  <div class="card">
+    <h3>Registrar Acción</h3>
 
-<div class="card">
-<h2>Mi Capital</h2>
-<h1 id="capitalTotal">0</h1>
-<div id="nivel"></div>
-<div class="progress-bar">
-<div class="progress-fill" id="progressFill"></div>
-</div>
-</div>
+    <button class="action-btn" onclick="addPoints('Ayudé a alguien',10)">Ayudé a alguien (+10)</button>
+    <button class="action-btn" onclick="addPoints('Me ejercité',8)">Me ejercité (+8)</button>
+    <button class="action-btn" onclick="addPoints('Leí',6)">Leí (+6)</button>
+    <button class="action-btn" onclick="addPoints('Cumplí mis calorías',5)">Cumplí mis calorías (+5)</button>
+  </div>
 
-<div class="card">
-<h3>Nueva Acción</h3>
-
-<select id="categoria">
-<option value="">Seleccionar categoría</option>
-<option value="Ayuda">Ayudé a alguien</option>
-<option value="Ejercicio">Me ejercité</option>
-<option value="Lectura">Leí</option>
-<option value="Disciplina">Mantuve calorías</option>
-</select>
-
-<textarea id="descripcion" placeholder="Descripción..."></textarea>
-<input type="file" id="foto" accept="image/*">
-<button class="main" onclick="subirAccion()">Publicar</button>
-</div>
-
-<div class="card">
-<h3>Historial</h3>
-<div id="historial"></div>
-</div>
+  <div class="card">
+    <h3>Historial</h3>
+    <div class="history" id="history"></div>
+  </div>
 
 </div>
-
-<div id="tab-muro" style="display:none;">
-<div id="feed"></div>
-</div>
-
-<div id="tab-ranking" style="display:none;">
-<div class="card">
-<h2>Ranking Público</h2>
-<div id="rankingList"></div>
-</div>
-</div>
-
-</div>
-</div>
-
-<div class="mobile-nav">
-<button onclick="showTab('perfil')" id="m-perfil">Perfil</button>
-<button onclick="showTab('muro')" id="m-muro">Muro</button>
-<button onclick="showTab('ranking')" id="m-ranking">Ranking</button>
 </div>
 
 <script>
-const _s = supabase.createClient(
-"https://dmlajgddeyfvwahswlvh.supabase.co",
-"sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
+
+const supabase = window.supabase.createClient(
+  "https://dmlajgddeyfvwahswlvh.supabase.co",
+  "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
 );
 
-let currentUser;
-let currentCapital=0;
-
-function calcularNivel(p){
-const nivel=Math.floor(p/500);
-const progreso=(p%500)/500*100;
-return {nivel,progreso};
-}
-
-function actualizarUI(){
-document.getElementById("capitalTotal").innerText=currentCapital;
-const {nivel,progreso}=calcularNivel(currentCapital);
-document.getElementById("nivel").innerText="Nivel "+nivel;
-document.getElementById("progressFill").style.width=progreso+"%";
-}
-
-async function subirAccion(){
-const categoria=document.getElementById("categoria").value;
-const descripcion=document.getElementById("descripcion").value;
-const file=document.getElementById("foto").files[0];
-
-if(!categoria || !file) return alert("Faltan datos");
-
-const path=`acciones/${currentUser.id}_${Date.now()}.jpg`;
-
-await _s.storage.from("pruebas").upload(path,file);
-
-const {data:{publicUrl}}=_s.storage.from("pruebas").getPublicUrl(path);
-
-await _s.from("acciones").insert([{
-usuario_id:currentUser.id,
-categoria,
-descripcion,
-foto_url:publicUrl,
-puntos:50
-}]);
-
-await _s.from("usuarios")
-.update({capital_total:currentCapital+50})
-.eq("id",currentUser.id);
-
-currentCapital+=50;
-actualizarUI();
-loadHistorial();
-loadFeed();
-loadRanking();
-}
-
-async function penalizar(){
-await _s.from("usuarios")
-.update({capital_total:currentCapital-50})
-.eq("id",currentUser.id);
-
-currentCapital-=50;
-actualizarUI();
-loadRanking();
-}
-
-async function loadHistorial(){
-const {data}=await _s.from("acciones")
-.select("*")
-.eq("usuario_id",currentUser.id)
-.order("created_at",{ascending:false});
-
-const h=document.getElementById("historial");
-h.innerHTML="";
-data?.forEach(a=>{
-h.innerHTML+=`
-<div class="card">
-<b>${a.categoria}</b>
-<p>${a.descripcion||""}</p>
-<img src="${a.foto_url}" class="action-img">
-<button class="danger" onclick="penalizar()">Penalizar -50</button>
-</div>`;
-});
-}
-
-async function loadFeed(){
-const {data}=await _s.from("acciones")
-.select("*")
-.order("created_at",{ascending:false})
-.limit(20);
-
-const f=document.getElementById("feed");
-f.innerHTML="";
-data?.forEach(a=>{
-f.innerHTML+=`
-<div class="card">
-<b>${a.categoria}</b>
-<p>${a.descripcion||""}</p>
-<img src="${a.foto_url}" class="action-img">
-<button onclick="validar(${a.id})">Validar</button>
-</div>`;
-});
-}
-
-async function validar(id){
-await _s.from("validaciones").insert([{
-accion_id:id,
-usuario_id:currentUser.id
-}]);
-alert("Validado");
-}
-
-async function loadRanking(){
-const {data}=await _s.from("usuarios")
-.select("email,capital_total")
-.order("capital_total",{ascending:false})
-.limit(10);
-
-const r=document.getElementById("rankingList");
-r.innerHTML="";
-data?.forEach((u,i)=>{
-r.innerHTML+=`<p>${i+1}. ${u.email.split("@")[0]} — ${u.capital_total||0}</p>`;
-});
-}
-
-function showTab(t){
-document.getElementById("tab-perfil").style.display="none";
-document.getElementById("tab-muro").style.display="none";
-document.getElementById("tab-ranking").style.display="none";
-document.getElementById("tab-"+t).style.display="block";
-
-document.querySelectorAll(".sidebar button,.mobile-nav button")
-.forEach(b=>b.classList.remove("active"));
-
-const d=document.getElementById("btn-"+t);
-const m=document.getElementById("m-"+t);
-if(d)d.classList.add("active");
-if(m)m.classList.add("active");
-}
+let user = null;
+let capital = 0;
+let historyList = [];
 
 async function login(){
-const email=document.getElementById("email").value;
-const pass=document.getElementById("pass").value;
-const {error}=await _s.auth.signInWithPassword({email,password:pass});
-if(error)alert(error.message);else init();
+  const email = document.getElementById("email").value;
+
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email: email
+  });
+
+  if(error){
+    alert(error.message);
+  } else {
+    alert("Revisá tu email para confirmar.");
+  }
 }
 
-async function logout(){
-await _s.auth.signOut();
-location.reload();
+supabase.auth.onAuthStateChange(async (event, session)=>{
+  if(session){
+    user = session.user;
+    startApp();
+  }
+});
+
+async function startApp(){
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("userEmail").innerText = user.email;
+
+  await loadData();
 }
 
-async function init(){
-const {data}=await _s.auth.getUser();
-if(data.user){
-currentUser=data.user;
-document.getElementById("authScreen").style.display="none";
-document.getElementById("app").style.display="flex";
-document.getElementById("userEmail").innerText=currentUser.email;
+async function loadData(){
+  const { data, error } = await supabase
+    .from("capital")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
 
-let {data:usuario}=await _s.from("usuarios")
-.select("*").eq("id",currentUser.id).single();
+  if(data){
+    capital = data.points;
+    historyList = data.history || [];
+  } else {
+    await supabase.from("capital").insert({
+      user_id: user.id,
+      points:0,
+      history:[]
+    });
+    capital = 0;
+    historyList = [];
+  }
 
-if(!usuario){
-await _s.from("usuarios").insert([{
-id:currentUser.id,
-email:currentUser.email,
-capital_total:0
-}]);
-currentCapital=0;
-}else{
-currentCapital=usuario.capital_total||0;
+  updateUI();
 }
 
-actualizarUI();
-loadHistorial();
-loadFeed();
-loadRanking();
-showTab("perfil");
-}
+async function addPoints(action, points){
+  capital += points;
+
+  const entry = action + " +" + points + " (" + new Date().toLocaleDateString() + ")";
+  historyList.unshift(entry);
+
+  await supabase.from("capital")
+  .update({
+    points: capital,
+    history: historyList
+  })
+  .eq("user_id", user.id);
+
+  animateCapital();
+  updateUI();
 }
 
-init();
+function updateUI(){
+  document.getElementById("capital").innerText = capital;
+
+  let level = Math.floor(capital / 100) + 1;
+  let progress = capital % 100;
+
+  document.getElementById("level").innerText = level;
+  document.getElementById("levelFill").style.width = progress + "%";
+
+  const historyDiv = document.getElementById("history");
+  historyDiv.innerHTML = "";
+
+  historyList.slice(0,20).forEach(item=>{
+    historyDiv.innerHTML += "<div>"+item+"</div>";
+  });
+}
+
+function animateCapital(){
+  const el = document.getElementById("capital");
+  el.style.transform = "scale(1.2)";
+  setTimeout(()=>{
+    el.style.transform = "scale(1)";
+  },200);
+}
+
 </script>
 
 </body>

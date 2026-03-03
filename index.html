@@ -5,63 +5,169 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Capital Moral</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-body {
+:root{
+  --bg:#0a0a0a;
+  --card:#161616;
+  --accent:#00ff88;
+  --text:#ffffff;
+  --muted:#777;
+}
+
+body{
   margin:0;
   font-family:sans-serif;
-  background:#0a0a0a;
-  color:white;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* Layout general */
+.app{
   display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+  min-height:100vh;
 }
-.card {
-  background:#161616;
-  padding:30px;
-  border-radius:20px;
-  width:320px;
+
+/* Sidebar desktop */
+.sidebar{
+  width:240px;
+  background:#111;
+  padding:20px;
+  display:none;
+  flex-direction:column;
+  border-right:1px solid #222;
 }
-input {
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:10px;
-  border:1px solid #333;
-  background:black;
-  color:white;
+
+.sidebar h2{
+  color:var(--accent);
 }
-button {
-  width:100%;
-  padding:12px;
-  border-radius:10px;
+
+.sidebar button{
+  background:none;
   border:none;
-  background:#00ff88;
+  color:#aaa;
+  padding:10px 0;
+  text-align:left;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.sidebar button.active{
+  color:var(--accent);
+}
+
+/* Contenido */
+.content{
+  flex:1;
+  padding:30px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.card{
+  background:var(--card);
+  padding:20px;
+  border-radius:20px;
+  margin-bottom:20px;
+}
+
+button.main{
+  background:var(--accent);
+  border:none;
+  padding:12px 20px;
+  border-radius:10px;
   font-weight:bold;
   cursor:pointer;
 }
-.small {
-  margin-top:10px;
-  text-align:center;
-  font-size:12px;
-  opacity:.6;
+
+/* Bottom nav móvil */
+.mobile-nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#111;
+  display:flex;
+  justify-content:space-around;
+  padding:15px 0;
+  border-top:1px solid #222;
+}
+
+.mobile-nav button{
+  background:none;
+  border:none;
+  color:#777;
+  font-weight:bold;
+}
+
+.mobile-nav button.active{
+  color:var(--accent);
+}
+
+/* Responsive */
+@media(min-width:900px){
+  .sidebar{
+    display:flex;
+  }
+  .mobile-nav{
+    display:none;
+  }
 }
 </style>
 </head>
 <body>
 
-<div class="card" id="authCard">
-  <h2>Login</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="pass" placeholder="Contraseña">
-  <button onclick="login()">Entrar</button>
-  <div class="small">Usa el usuario que ya creaste en Supabase</div>
+<div id="authScreen" style="display:flex; justify-content:center; align-items:center; height:100vh;">
+  <div class="card" style="width:320px;">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px;">
+    <input type="password" id="pass" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:10px;">
+    <button class="main" onclick="login()" style="width:100%;">Entrar</button>
+  </div>
 </div>
 
-<div class="card" id="userCard" style="display:none;">
-  <h2>Bienvenido</h2>
-  <p id="userEmail"></p>
-  <button onclick="logout()">Cerrar sesión</button>
+<div class="app" id="app" style="display:none;">
+
+  <div class="sidebar">
+    <h2>Capital Moral</h2>
+    <button onclick="showTab('perfil')" id="btn-perfil">Perfil</button>
+    <button onclick="showTab('ranking')" id="btn-ranking">Ranking</button>
+    <button onclick="logout()">Cerrar sesión</button>
+  </div>
+
+  <div class="content">
+    <div class="topbar">
+      <div>
+        <h3 id="userEmail"></h3>
+      </div>
+      <button onclick="logout()">Salir</button>
+    </div>
+
+    <div id="tab-perfil">
+      <div class="card">
+        <h2>Mi Capital</h2>
+        <h1 id="capitalTotal">0</h1>
+      </div>
+    </div>
+
+    <div id="tab-ranking" style="display:none;">
+      <div class="card">
+        <h2>Ranking Público</h2>
+        <div id="rankingList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="mobile-nav" id="mobileNav" style="display:none;">
+  <button onclick="showTab('perfil')" id="m-perfil">Perfil</button>
+  <button onclick="showTab('ranking')" id="m-ranking">Ranking</button>
 </div>
 
 <script>
@@ -70,37 +176,69 @@ const _s = supabase.createClient(
   "sb_publishable_gsI_j5ddQSWeclCq_RT2cg_nib8UwRX"
 );
 
-async function login() {
+async function login(){
   const email = document.getElementById("email").value;
   const pass = document.getElementById("pass").value;
 
-  const { error } = await _s.auth.signInWithPassword({
-    email: email,
-    password: pass
-  });
+  const { error } = await _s.auth.signInWithPassword({ email, password:pass });
 
-  if(error) {
+  if(error){
     alert(error.message);
-  } else {
-    checkUser();
+  }else{
+    init();
   }
 }
 
-async function logout() {
+async function logout(){
   await _s.auth.signOut();
   location.reload();
 }
 
-async function checkUser() {
+function showTab(tab){
+  document.getElementById("tab-perfil").style.display="none";
+  document.getElementById("tab-ranking").style.display="none";
+
+  document.getElementById("tab-"+tab).style.display="block";
+
+  document.querySelectorAll(".sidebar button, .mobile-nav button").forEach(b=>b.classList.remove("active"));
+
+  const desktopBtn = document.getElementById("btn-"+tab);
+  const mobileBtn = document.getElementById("m-"+tab);
+
+  if(desktopBtn) desktopBtn.classList.add("active");
+  if(mobileBtn) mobileBtn.classList.add("active");
+}
+
+async function loadRanking(){
+  const { data } = await _s.from("usuarios")
+    .select("email, capital_total")
+    .order("capital_total",{ascending:false})
+    .limit(10);
+
+  const list = document.getElementById("rankingList");
+  list.innerHTML="";
+
+  data?.forEach((u,i)=>{
+    list.innerHTML += `<p>${i+1}. ${u.email.split("@")[0]} — ${u.capital_total || 0}</p>`;
+  });
+}
+
+async function init(){
   const { data } = await _s.auth.getUser();
-  if(data.user) {
-    document.getElementById("authCard").style.display = "none";
-    document.getElementById("userCard").style.display = "block";
+
+  if(data.user){
+    document.getElementById("authScreen").style.display="none";
+    document.getElementById("app").style.display="flex";
+    document.getElementById("mobileNav").style.display="flex";
+
     document.getElementById("userEmail").innerText = data.user.email;
+
+    loadRanking();
+    showTab("perfil");
   }
 }
 
-checkUser();
+init();
 </script>
 
 </body>

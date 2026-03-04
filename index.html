@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Capital Moral</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 body{
   margin:0;
@@ -12,23 +13,31 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 .container{
-  max-width:500px;
+  max-width:520px;
   margin:60px auto;
   padding:20px;
 }
 .card{
   background:#171717;
-  padding:25px;
-  border-radius:12px;
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
+  padding:28px;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+h1{
+  margin:10px 0;
+  font-size:42px;
+  font-weight:600;
+}
+h2{
+  margin:0;
+  font-weight:500;
 }
 input,button{
-  width:100%;
   padding:10px;
-  margin-top:10px;
   border:none;
   border-radius:8px;
   font-size:14px;
+  width:100%;
 }
 input{
   background:#222;
@@ -43,18 +52,24 @@ button{
 button:hover{
   background:#3a3a3a;
 }
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
 .progress{
-  height:8px;
+  height:6px;
   background:#222;
   border-radius:10px;
-  margin-top:10px;
+  margin-top:12px;
 }
 .progress-bar{
-  height:8px;
+  height:6px;
   background:white;
   width:0%;
   border-radius:10px;
-  transition:0.4s;
+  transition:0.3s ease;
 }
 .small{
   font-size:12px;
@@ -63,35 +78,44 @@ button:hover{
 .history{
   margin-top:20px;
   font-size:13px;
-  max-height:180px;
-  overflow:auto;
+  max-height:260px;
+  overflow-y:auto;
+  padding-right:4px;
 }
 .entry{
-  border-bottom:1px solid #222;
-  padding:6px 0;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  padding:6px 0;
+  border-bottom:1px solid #222;
+}
+.entry span{
+  flex:1;
 }
 .entry input{
   width:60px;
   font-size:12px;
   padding:4px;
+  text-align:center;
 }
-.fade{
-  animation:fadeUp 0.4s ease;
+.delete{
+  background:none;
+  color:#888;
+  font-size:12px;
+  padding:4px;
+  width:auto;
 }
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(5px);}
-  to{opacity:1;transform:translateY(0);}
+.delete:hover{
+  color:white;
 }
 .streak{
-  margin-top:10px;
+  margin-top:8px;
   font-size:13px;
   opacity:0.7;
 }
 </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -111,8 +135,14 @@ button:hover{
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 <div class="streak">Racha: <span id="streak">0</span> días</div>
 
+<div class="actions">
 <button onclick="quickAdd('Ejercicio',20)">Ejercicio +20</button>
 <button onclick="quickAdd('Lectura',15)">Lectura +15</button>
+<button onclick="quickAdd('Meditación',25)">Meditación +25</button>
+<button onclick="quickAdd('Ayuda',30)">Ayuda +30</button>
+<button onclick="quickAdd('Estudio profundo',35)">Estudio +35</button>
+<button onclick="quickAdd('Disciplina total',40)">Disciplina +40</button>
+</div>
 
 <input id="customName" placeholder="Acción personalizada">
 <input id="customPoints" type="number" placeholder="Puntos">
@@ -149,7 +179,7 @@ function calcPoints(){
 return historyData.reduce((sum,e)=>sum+e.puntos,0);
 }
 
-function updateUI(){
+function updateTotalsOnly(){
 let total=calcPoints();
 document.getElementById("points").innerText=total;
 
@@ -158,9 +188,11 @@ document.getElementById("level").innerText=lvl.n;
 
 let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
 document.getElementById("progressBar").style.width=percent+"%";
+}
 
+function updateUI(){
+updateTotalsOnly();
 document.getElementById("streak").innerText=streak;
-
 renderHistory();
 }
 
@@ -169,47 +201,37 @@ let container=document.getElementById("history");
 container.innerHTML="";
 historyData.slice().reverse().forEach(entry=>{
 container.innerHTML+=`
-<div class="entry fade">
+<div class="entry">
 <span>${entry.accion}</span>
 <input type="number" value="${entry.puntos}" onchange="editPoints('${entry.id}',this.value)">
-<button onclick="deleteEntry('${entry.id}')">X</button>
+<button class="delete" onclick="deleteEntry('${entry.id}')">✕</button>
 </div>`;
 });
 }
 
 function checkStreak(){
 let today=new Date().toISOString().split("T")[0];
-
-if(!lastAction){
-streak=1;
-}
+if(!lastAction){ streak=1; }
 else{
 let yesterday=new Date();
 yesterday.setDate(yesterday.getDate()-1);
 yesterday=yesterday.toISOString().split("T")[0];
-
-if(lastAction===today){
-}
-else if(lastAction===yesterday){
-streak++;
-}
-else{
-streak=1;
-}
+if(lastAction===today){}
+else if(lastAction===yesterday){ streak++; }
+else{ streak=1; }
 }
 lastAction=today;
 }
 
 function quickAdd(name,points){
 checkStreak();
-
 historyData.push({
 id:crypto.randomUUID(),
 accion:name,
 puntos:points,
 fecha:new Date().toISOString()
 });
-save();
+save(true);
 }
 
 function customAdd(){
@@ -224,15 +246,16 @@ document.getElementById("customPoints").value="";
 function editPoints(id,newValue){
 let entry=historyData.find(e=>e.id===id);
 entry.puntos=parseInt(newValue);
-save();
+updateTotalsOnly();
+save(false);
 }
 
 function deleteEntry(id){
 historyData=historyData.filter(e=>e.id!==id);
-save();
+save(true);
 }
 
-async function save(){
+async function save(render=true){
 await client.from("capital")
 .update({
 history:historyData,
@@ -240,8 +263,7 @@ streak:streak,
 last_action:lastAction
 })
 .eq("user_id",user.id);
-
-updateUI();
+if(render) updateUI();
 }
 
 async function load(){

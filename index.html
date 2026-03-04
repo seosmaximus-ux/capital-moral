@@ -24,12 +24,11 @@ body{
 }
 .nav{
   display:flex;
-  justify-content:space-between;
+  gap:8px;
   margin-bottom:20px;
 }
 .nav button{
   flex:1;
-  margin:0 5px;
 }
 button,input{
   background:#222;
@@ -42,8 +41,8 @@ button,input{
 button:hover{ background:#333; cursor:pointer;}
 input{ width:100%; margin-top:10px;}
 .avatar{
-  width:50px;
-  height:50px;
+  width:60px;
+  height:60px;
   border-radius:50%;
   background:#222;
   background-size:cover;
@@ -51,14 +50,27 @@ input{ width:100%; margin-top:10px;}
 }
 .feedItem{
   border-bottom:1px solid #222;
-  padding:10px 0;
+  padding:12px 0;
 }
 .small{ font-size:12px; opacity:0.6; }
 .actionRow{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   font-size:13px;
-  padding:3px 0;
+  padding:6px 0;
+}
+.deleteBtn{
+  font-size:12px;
+  opacity:0.4;
+  cursor:pointer;
+}
+.deleteBtn:hover{ opacity:1; }
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:15px;
 }
 </style>
 </head>
@@ -99,17 +111,7 @@ const client = window.supabase.createClient(
 
 let user=null;
 
-function showSection(section){
-document.getElementById("feedSection").style.display="none";
-document.getElementById("todaySection").style.display="none";
-document.getElementById("profileSection").style.display="none";
-
-if(section==="feed"){ loadFeed(); document.getElementById("feedSection").style.display="block";}
-if(section==="today"){ loadToday(); document.getElementById("todaySection").style.display="block";}
-if(section==="profile"){ loadProfile(); document.getElementById("profileSection").style.display="block";}
-}
-
-/* AUTH */
+/* -------- AUTH -------- */
 
 async function register(){
 let email=document.getElementById("email").value;
@@ -130,7 +132,6 @@ start();
 async function start(){
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
-
 await ensureProfile();
 showSection('feed');
 }
@@ -148,7 +149,19 @@ start();
 }
 })();
 
-/* PROFILE */
+/* -------- NAV -------- */
+
+function showSection(section){
+document.getElementById("feedSection").style.display="none";
+document.getElementById("todaySection").style.display="none";
+document.getElementById("profileSection").style.display="none";
+
+if(section==="feed"){ loadFeed(); document.getElementById("feedSection").style.display="block";}
+if(section==="today"){ loadToday(); document.getElementById("todaySection").style.display="block";}
+if(section==="profile"){ loadProfile(); document.getElementById("profileSection").style.display="block";}
+}
+
+/* -------- PROFILE -------- */
 
 async function ensureProfile(){
 const {data}=await client.from("profiles")
@@ -172,32 +185,52 @@ const {data}=await client.from("profiles")
 .single();
 
 document.getElementById("profileSection").innerHTML=`
-<h3>Perfil</h3>
-<div class="avatar" style="background-image:url(${data.avatar_url||""})"></div>
-<input type="file" onchange="uploadAvatar(event)">
+<h3>${data.username || "Perfil"}</h3>
+
+<div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;">
+<div class="avatar" id="profileAvatar"
+style="background-image:url(${data.avatar_url||""})"></div>
+<div>
+<input type="file" id="avatarInput">
+<button onclick="uploadAvatar()">Subir imagen</button>
+</div>
+</div>
+
 <input id="usernameInput" value="${data.username||""}" placeholder="Nombre de usuario">
-<button onclick="updateUsername()">Guardar</button>
+<button onclick="updateUsername()">Guardar nombre</button>
+<div id="profileMessage" class="small"></div>
 `;
 }
 
 async function updateUsername(){
 let value=document.getElementById("usernameInput").value;
-await client.from("profiles").update({username:value}).eq("id",user.id);
-loadProfile();
+await client.from("profiles")
+.update({username:value})
+.eq("id",user.id);
+
+document.getElementById("profileMessage").innerText="Nombre actualizado";
 }
 
-async function uploadAvatar(event){
-let file=event.target.files[0];
+async function uploadAvatar(){
+let file=document.getElementById("avatarInput").files[0];
+if(!file) return;
+
 let path=user.id+"/avatar.png";
 
 await client.storage.from("avatars").upload(path,file,{upsert:true});
 let {data}=client.storage.from("avatars").getPublicUrl(path);
 
-await client.from("profiles").update({avatar_url:data.publicUrl}).eq("id",user.id);
-loadProfile();
+await client.from("profiles")
+.update({avatar_url:data.publicUrl})
+.eq("id",user.id);
+
+document.getElementById("profileAvatar")
+.style.backgroundImage=`url(${data.publicUrl})`;
+
+document.getElementById("profileMessage").innerText="Imagen actualizada";
 }
 
-/* ACTIONS */
+/* -------- ACTIONS -------- */
 
 async function addAction(name,points){
 await client.from("actions").insert({
@@ -205,6 +238,24 @@ user_id:user.id,
 name,
 points
 });
+loadToday();
+loadFeed();
+}
+
+async function editAction(id,value){
+await client.from("actions")
+.update({points:parseInt(value)||0})
+.eq("id",id);
+
+loadToday();
+loadFeed();
+}
+
+async function deleteAction(id){
+await client.from("actions")
+.delete()
+.eq("id",id);
+
 loadToday();
 loadFeed();
 }
@@ -219,22 +270,33 @@ const {data}=await client.from("actions")
 .order("created_at",{ascending:false});
 
 let html="<h3>Hoy</h3>";
-html+=`<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
+
+html+=`
+<div class="grid2">
+<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
 <button onclick="addAction('Lectura',15)">Lectura +15</button>
 <button onclick="addAction('Disciplina',25)">Disciplina +25</button>
-<button onclick="addAction('Ayuda',30)">Ayuda +30</button>`;
+<button onclick="addAction('Ayuda',30)">Ayuda +30</button>
+</div>
+`;
 
 data.forEach(a=>{
-html+=`<div class="actionRow">
+html+=`
+<div class="actionRow">
 <span>${a.name}</span>
-<span>+${a.points}</span>
-</div>`;
+<input type="number" value="${a.points}"
+style="width:60px;background:#111;text-align:center;"
+onchange="editAction('${a.id}',this.value)">
+<span class="deleteBtn"
+onclick="deleteAction('${a.id}')">x</span>
+</div>
+`;
 });
 
 document.getElementById("todaySection").innerHTML=html;
 }
 
-/* FEED */
+/* -------- FEED -------- */
 
 async function loadFeed(){
 const {data}=await client.from("actions")
@@ -248,7 +310,8 @@ data.forEach(a=>{
 html+=`
 <div class="feedItem">
 <div style="display:flex;align-items:center;gap:10px;">
-<div class="avatar" style="background-image:url(${a.profiles?.avatar_url||""})"></div>
+<div class="avatar"
+style="background-image:url(${a.profiles?.avatar_url||""})"></div>
 <div>
 <div>${a.profiles?.username||"Usuario"}</div>
 <div class="small">${new Date(a.created_at).toLocaleString()}</div>

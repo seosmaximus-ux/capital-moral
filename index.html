@@ -1,375 +1,315 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Capital Moral</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{
   margin:0;
-  background:#0f0f0f;
-  color:#eaeaea;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:#f4f6f8;
+  color:#1a1a1a;
 }
-.container{
-  max-width:540px;
-  margin:80px auto;
-  padding:24px;
-}
-.card{
-  background:#171717;
-  padding:36px;
-  border-radius:16px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.6);
-  position:relative;
-}
-.topbar{
+
+/* NAVBAR */
+.navbar{
+  background:white;
+  padding:16px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:20px;
+  box-shadow:0 1px 6px rgba(0,0,0,0.05);
 }
-.logout{
-  font-size:12px;
-  opacity:0.5;
-  cursor:pointer;
-}
-.logout:hover{
-  opacity:1;
-}
-h1{
-  margin:20px 0 10px 0;
-  font-size:44px;
+
+.navbar h1{
+  font-size:20px;
   font-weight:600;
-}
-h2{
   margin:0;
-  font-weight:500;
 }
-input,button{
-  padding:12px;
+
+.nav-links{
+  display:flex;
+  gap:24px;
+}
+
+.nav-links button{
+  background:none;
   border:none;
-  border-radius:10px;
   font-size:14px;
-  width:100%;
-}
-input{
-  background:#222;
-  color:white;
-}
-button{
-  background:#2c2c2c;
-  color:white;
   cursor:pointer;
-  transition:0.2s;
+  color:#555;
 }
-button:hover{
-  background:#3a3a3a;
+
+.nav-links button:hover{
+  color:black;
 }
+
+.logout{
+  background:#111;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* CONTENIDO */
+.container{
+  max-width:900px;
+  margin:40px auto;
+  padding:0 20px;
+}
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+}
+
+/* TARJETAS */
+.card{
+  background:white;
+  padding:24px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom:30px;
+}
+
+/* ACCIONES GRID */
 .actions{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:14px;
-  margin:30px 0;
+  gap:18px;
+  margin-top:20px;
 }
-.progress{
-  height:6px;
-  background:#222;
+
+.action{
+  background:#fafafa;
+  padding:16px;
   border-radius:10px;
-  margin-top:16px;
-}
-.progress-bar{
-  height:6px;
-  background:white;
-  width:0%;
-  border-radius:10px;
-  transition:0.3s ease;
-}
-.small{
-  font-size:12px;
-  opacity:0.6;
-}
-.history{
-  margin-top:30px;
-  font-size:13px;
-  max-height:420px;
-  overflow-y:auto;
-  padding-right:6px;
-}
-.entry{
-  padding:14px 0;
-  border-bottom:1px solid #222;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.entry-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  border:1px solid #eee;
 }
-.entry input{
-  width:70px;
-  font-size:12px;
-  padding:6px;
-  text-align:center;
-}
-.delete{
-  background:none;
-  color:#666;
-  font-size:12px;
-  padding:4px;
-  width:auto;
-}
-.delete:hover{
+
+.action button{
+  background:#111;
   color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
 }
-.date{
+
+/* HISTORIAL */
+.history{
+  max-height:350px;
+  overflow-y:auto;
+  margin-top:20px;
+}
+
+.history-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+.history-item small{
+  color:#777;
   font-size:11px;
-  opacity:0.4;
 }
-.streak{
-  margin-top:10px;
-  font-size:13px;
-  opacity:0.7;
+
+.delete-btn{
+  background:none;
+  border:none;
+  font-size:12px;
+  cursor:pointer;
+  color:#999;
 }
-.section{
-  margin-top:25px;
+
+.delete-btn:hover{
+  color:red;
+}
+
+/* FORM */
+input{
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+
+.custom-action{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
 }
 </style>
 </head>
-
 <body>
 
-<div class="container">
-
-<div class="card" id="loginBox">
-<h2>Capital Moral</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Contraseña">
-<div class="section">
-<button onclick="register()">Registrarse</button>
-<button onclick="login()">Entrar</button>
-</div>
-</div>
-
-<div class="card" id="app" style="display:none;">
-
-<div class="topbar">
-<div id="userEmail" class="small"></div>
-<div class="logout" onclick="logout()">Cerrar sesión</div>
+<div id="auth-container" class="container">
+  <div class="card">
+    <h2>Iniciar sesión</h2>
+    <br>
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Contraseña"><br><br>
+    <button onclick="login()">Entrar</button>
+    <button onclick="register()">Registrarse</button>
+  </div>
 </div>
 
-<h2 id="level"></h2>
-<h1 id="points">0</h1>
+<div id="app" style="display:none;">
+  <div class="navbar">
+    <h1>Capital Moral</h1>
+    <div class="nav-links">
+      <button onclick="showSection('home')">Inicio</button>
+      <button onclick="showSection('history')">Historial</button>
+      <button onclick="showSection('donations')">Donaciones</button>
+    </div>
+    <button class="logout" onclick="logout()">Cerrar sesión</button>
+  </div>
 
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
-</div>
+  <div class="container">
 
-<div class="streak">
-Racha: <span id="streak">0</span> días
-</div>
+    <!-- INICIO -->
+    <div id="home" class="section active">
+      <div class="card">
+        <h2>Acciones</h2>
 
-<div class="actions">
-<button onclick="quickAdd('Ejercicio',20)">Ejercicio +20</button>
-<button onclick="quickAdd('Lectura',15)">Lectura +15</button>
-<button onclick="quickAdd('Meditación',25)">Meditación +25</button>
-<button onclick="quickAdd('Ayuda',30)">Ayuda +30</button>
-<button onclick="quickAdd('Estudio profundo',35)">Estudio +35</button>
-<button onclick="quickAdd('Disciplina total',40)">Disciplina +40</button>
-</div>
+        <div class="actions">
+          <div class="action">Leer 30 min <button onclick="addPoints(10,'Leer 30 min')">+10</button></div>
+          <div class="action">Entrenar <button onclick="addPoints(15,'Entrenar')">+15</button></div>
+          <div class="action">Meditar <button onclick="addPoints(8,'Meditar')">+8</button></div>
+          <div class="action">Ayudar a alguien <button onclick="addPoints(20,'Ayudar a alguien')">+20</button></div>
+          <div class="action">Estudiar 1h <button onclick="addPoints(12,'Estudiar 1h')">+12</button></div>
+          <div class="action">Cuidar el cuerpo <button onclick="addPoints(10,'Cuidar el cuerpo')">+10</button></div>
+        </div>
 
-<input id="customName" placeholder="Acción personalizada">
-<input id="customPoints" type="number" placeholder="Puntos">
-<div class="section">
-<button onclick="customAdd()">Agregar acción</button>
-</div>
+        <div class="custom-action">
+          <input type="text" id="customName" placeholder="Acción personalizada">
+          <input type="number" id="customPoints" placeholder="Puntos">
+          <button onclick="addCustom()">Agregar</button>
+        </div>
 
-<div class="history" id="history"></div>
+      </div>
+    </div>
 
-</div>
+    <!-- HISTORIAL -->
+    <div id="history" class="section">
+      <div class="card">
+        <h2>Historial</h2>
+        <div class="history" id="historyList"></div>
+      </div>
+    </div>
 
+    <!-- DONACIONES -->
+    <div id="donations" class="section">
+      <div class="card">
+        <h2>Donaciones</h2>
+        <p>Próximamente podrás donar puntos a causas.</p>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
-
-const client = window.supabase.createClient(
-"https://mlxcjgywjhtodcjjeiuv.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+const supabase = window.supabase.createClient(
+  "https://mlxcjgywjhtodcjjeiuv.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
 );
 
-let user=null;
-let historyData=[];
-let streak=0;
-let lastAction=null;
-
-const levels=[
-{n:"Principiante",min:0,max:99},
-{n:"Disciplinado",min:100,max:299},
-{n:"Ejemplar",min:300,max:699},
-{n:"Mentor",min:700,max:1499},
-{n:"Leyenda",min:1500,max:999999}
-];
-
-function calcPoints(){
-return historyData.reduce((sum,e)=>sum+e.puntos,0);
-}
-
-function updateTotalsOnly(){
-let total=calcPoints();
-document.getElementById("points").innerText=total;
-
-let lvl=levels.find(l=>total>=l.min && total<=l.max);
-document.getElementById("level").innerText=lvl.n;
-
-let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
-document.getElementById("progressBar").style.width=percent+"%";
-}
-
-function updateUI(){
-updateTotalsOnly();
-document.getElementById("streak").innerText=streak;
-renderHistory();
-}
-
-function formatDate(dateString){
-let d=new Date(dateString);
-return d.toLocaleDateString()+" · "+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-}
-
-function renderHistory(){
-let container=document.getElementById("history");
-container.innerHTML="";
-historyData.slice().reverse().forEach(entry=>{
-container.innerHTML+=`
-<div class="entry">
-<div class="entry-top">
-<span>${entry.accion}</span>
-<div>
-<input type="number" value="${entry.puntos}" onchange="editPoints('${entry.id}',this.value)">
-<button class="delete" onclick="deleteEntry('${entry.id}')">✕</button>
-</div>
-</div>
-<div class="date">${formatDate(entry.fecha)}</div>
-</div>`;
-});
-}
-
-function checkStreak(){
-let today=new Date().toISOString().split("T")[0];
-if(!lastAction){ streak=1; }
-else{
-let yesterday=new Date();
-yesterday.setDate(yesterday.getDate()-1);
-yesterday=yesterday.toISOString().split("T")[0];
-if(lastAction===today){}
-else if(lastAction===yesterday){ streak++; }
-else{ streak=1; }
-}
-lastAction=today;
-}
-
-function quickAdd(name,points){
-checkStreak();
-historyData.push({
-id:crypto.randomUUID(),
-accion:name,
-puntos:points,
-fecha:new Date().toISOString()
-});
-save(true);
-}
-
-function customAdd(){
-let n=document.getElementById("customName").value;
-let p=parseInt(document.getElementById("customPoints").value);
-if(!n||!p) return;
-quickAdd(n,p);
-document.getElementById("customName").value="";
-document.getElementById("customPoints").value="";
-}
-
-function editPoints(id,newValue){
-let entry=historyData.find(e=>e.id===id);
-entry.puntos=parseInt(newValue);
-updateTotalsOnly();
-save(false);
-}
-
-function deleteEntry(id){
-historyData=historyData.filter(e=>e.id!==id);
-save(true);
-}
-
-async function save(render=true){
-await client.from("capital")
-.update({
-history:historyData,
-streak:streak,
-last_action:lastAction
-})
-.eq("user_id",user.id);
-if(render) updateUI();
-}
-
-async function load(){
-const {data}=await client.from("capital")
-.select("*")
-.eq("user_id",user.id)
-.single();
-
-if(!data){
-await client.from("capital").insert({
-user_id:user.id,
-history:[],
-streak:0
-});
-}else{
-historyData=data.history||[];
-streak=data.streak||0;
-lastAction=data.last_action;
-}
-updateUI();
+async function login(){
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  await supabase.auth.signInWithPassword({email,password});
 }
 
 async function register(){
-let email=document.getElementById("email").value;
-let password=document.getElementById("password").value;
-await client.auth.signUp({email,password});
-alert("Usuario creado");
-}
-
-async function login(){
-let email=document.getElementById("email").value;
-let password=document.getElementById("password").value;
-const {data,error}=await client.auth.signInWithPassword({email,password});
-if(error){alert(error.message);return;}
-user=data.user;
-start();
-}
-
-async function start(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("app").style.display="block";
-document.getElementById("userEmail").innerText=user.email;
-await load();
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  await supabase.auth.signUp({email,password});
 }
 
 async function logout(){
-await client.auth.signOut();
-location.reload();
+  await supabase.auth.signOut();
 }
 
-window.addEventListener("load", async ()=>{
-const {data}=await client.auth.getSession();
-if(data.session){
-user=data.session.user;
-start();
-}
+supabase.auth.onAuthStateChange((event, session)=>{
+  if(session){
+    document.getElementById("auth-container").style.display="none";
+    document.getElementById("app").style.display="block";
+    loadHistory();
+  }else{
+    document.getElementById("auth-container").style.display="block";
+    document.getElementById("app").style.display="none";
+  }
 });
 
+async function addPoints(points,name){
+  const user = (await supabase.auth.getUser()).data.user;
+  await supabase.from("capital_history").insert([{
+    user_id:user.id,
+    action_name:name,
+    points:points
+  }]);
+  loadHistory();
+}
+
+async function addCustom(){
+  const name=document.getElementById('customName').value;
+  const points=parseInt(document.getElementById('customPoints').value);
+  addPoints(points,name);
+}
+
+async function loadHistory(){
+  const user = (await supabase.auth.getUser()).data.user;
+  const {data} = await supabase
+  .from("capital_history")
+  .select("*")
+  .eq("user_id",user.id)
+  .order("created_at",{ascending:false});
+
+  const list=document.getElementById("historyList");
+  list.innerHTML="";
+
+  data.forEach(item=>{
+    const div=document.createElement("div");
+    div.className="history-item";
+    div.innerHTML=`
+      <div>
+        ${item.action_name} (+${item.points})
+        <br><small>${new Date(item.created_at).toLocaleString()}</small>
+      </div>
+      <button class="delete-btn" onclick="deleteItem('${item.id}')">Eliminar</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+async function deleteItem(id){
+  await supabase.from("capital_history").delete().eq("id",id);
+  loadHistory();
+}
+
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
 </script>
+
 </body>
 </html>

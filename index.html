@@ -63,7 +63,7 @@ button:hover{
 .history{
   margin-top:20px;
   font-size:13px;
-  max-height:150px;
+  max-height:180px;
   overflow:auto;
 }
 .entry{
@@ -71,14 +71,24 @@ button:hover{
   padding:6px 0;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
-.entry span{
-  cursor:pointer;
+.entry input{
+  width:60px;
+  font-size:12px;
+  padding:4px;
 }
-.entry button{
-  width:auto;
-  padding:4px 8px;
-  font-size:11px;
+.fade{
+  animation:fadeUp 0.4s ease;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.streak{
+  margin-top:10px;
+  font-size:13px;
+  opacity:0.7;
 }
 </style>
 </head>
@@ -99,6 +109,7 @@ button:hover{
 <h2 id="level"></h2>
 <h1 id="points">0</h1>
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div class="streak">Racha: <span id="streak">0</span> días</div>
 
 <button onclick="quickAdd('Ejercicio',20)">Ejercicio +20</button>
 <button onclick="quickAdd('Lectura',15)">Lectura +15</button>
@@ -123,6 +134,8 @@ const client = window.supabase.createClient(
 
 let user=null;
 let historyData=[];
+let streak=0;
+let lastAction=null;
 
 const levels=[
 {n:"Principiante",min:0,max:99},
@@ -146,6 +159,8 @@ document.getElementById("level").innerText=lvl.n;
 let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
 document.getElementById("progressBar").style.width=percent+"%";
 
+document.getElementById("streak").innerText=streak;
+
 renderHistory();
 }
 
@@ -154,14 +169,40 @@ let container=document.getElementById("history");
 container.innerHTML="";
 historyData.slice().reverse().forEach(entry=>{
 container.innerHTML+=`
-<div class="entry">
-<span onclick="editEntry('${entry.id}')">${entry.accion} +${entry.puntos}</span>
+<div class="entry fade">
+<span>${entry.accion}</span>
+<input type="number" value="${entry.puntos}" onchange="editPoints('${entry.id}',this.value)">
 <button onclick="deleteEntry('${entry.id}')">X</button>
 </div>`;
 });
 }
 
+function checkStreak(){
+let today=new Date().toISOString().split("T")[0];
+
+if(!lastAction){
+streak=1;
+}
+else{
+let yesterday=new Date();
+yesterday.setDate(yesterday.getDate()-1);
+yesterday=yesterday.toISOString().split("T")[0];
+
+if(lastAction===today){
+}
+else if(lastAction===yesterday){
+streak++;
+}
+else{
+streak=1;
+}
+}
+lastAction=today;
+}
+
 function quickAdd(name,points){
+checkStreak();
+
 historyData.push({
 id:crypto.randomUUID(),
 accion:name,
@@ -180,24 +221,26 @@ document.getElementById("customName").value="";
 document.getElementById("customPoints").value="";
 }
 
+function editPoints(id,newValue){
+let entry=historyData.find(e=>e.id===id);
+entry.puntos=parseInt(newValue);
+save();
+}
+
 function deleteEntry(id){
 historyData=historyData.filter(e=>e.id!==id);
 save();
 }
 
-function editEntry(id){
-let entry=historyData.find(e=>e.id===id);
-let newPoints=parseInt(prompt("Modificar puntos:",entry.puntos));
-if(!isNaN(newPoints)){
-entry.puntos=newPoints;
-save();
-}
-}
-
 async function save(){
 await client.from("capital")
-.update({history:historyData})
+.update({
+history:historyData,
+streak:streak,
+last_action:lastAction
+})
 .eq("user_id",user.id);
+
 updateUI();
 }
 
@@ -208,10 +251,15 @@ const {data}=await client.from("capital")
 .single();
 
 if(!data){
-await client.from("capital").insert({user_id:user.id,history:[]});
-historyData=[];
+await client.from("capital").insert({
+user_id:user.id,
+history:[],
+streak:0
+});
 }else{
 historyData=data.history||[];
+streak=data.streak||0;
+lastAction=data.last_action;
 }
 updateUI();
 }
@@ -244,7 +292,6 @@ await client.auth.signOut();
 location.reload();
 }
 
-/* 🔥 RESTAURAR SESIÓN AUTOMÁTICAMENTE */
 window.addEventListener("load", async ()=>{
 const {data}=await client.auth.getSession();
 if(data.session){
@@ -256,4 +303,3 @@ start();
 </script>
 </body>
 </html>
-

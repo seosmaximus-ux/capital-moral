@@ -12,27 +12,35 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 .container{
-  max-width:520px;
-  margin:60px auto;
+  max-width:700px;
+  margin:40px auto;
   padding:20px;
 }
 .card{
   background:#171717;
-  padding:25px;
+  padding:20px;
   border-radius:14px;
-  box-shadow:0 0 25px rgba(0,0,0,0.5);
-}
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   margin-bottom:20px;
 }
-.profile{
+.nav{
   display:flex;
-  align-items:center;
-  gap:12px;
+  justify-content:space-between;
+  margin-bottom:20px;
 }
+.nav button{
+  flex:1;
+  margin:0 5px;
+}
+button,input{
+  background:#222;
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:10px;
+  font-size:14px;
+}
+button:hover{ background:#333; cursor:pointer;}
+input{ width:100%; margin-top:10px;}
 .avatar{
   width:50px;
   height:50px;
@@ -41,77 +49,24 @@ body{
   background-size:cover;
   background-position:center;
 }
-.username{
-  font-size:14px;
-  font-weight:600;
+.feedItem{
+  border-bottom:1px solid #222;
+  padding:10px 0;
 }
-input,button{
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  font-size:14px;
-}
-input{
-  background:#222;
-  color:white;
-  width:100%;
-  margin-top:10px;
-}
-button{
-  background:#2c2c2c;
-  color:white;
-  cursor:pointer;
-  transition:0.2s;
-}
-button:hover{ background:#3a3a3a; }
-.actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:20px;
-}
-.progress{
-  height:8px;
-  background:#222;
-  border-radius:10px;
-  margin-top:10px;
-}
-.progress-bar{
-  height:8px;
-  background:white;
-  width:0%;
-  border-radius:10px;
-  transition:0.4s;
-}
-.entry{
+.small{ font-size:12px; opacity:0.6; }
+.actionRow{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid #222;
-  padding:6px 0;
   font-size:13px;
+  padding:3px 0;
 }
-.entry input{
-  width:60px;
-  background:#111;
-  text-align:center;
-  padding:4px;
-  font-size:12px;
-}
-.delete{
-  font-size:11px;
-  opacity:0.5;
-  cursor:pointer;
-}
-.delete:hover{ opacity:1; }
-.small{ font-size:12px; opacity:0.6; }
 </style>
 </head>
 <body>
 
 <div class="container">
 
-<div class="card" id="loginBox">
+<div id="loginBox" class="card">
 <h2>Capital Moral</h2>
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Contraseña">
@@ -119,38 +74,18 @@ button:hover{ background:#3a3a3a; }
 <button onclick="login()">Entrar</button>
 </div>
 
-<div class="card" id="app" style="display:none;">
+<div id="app" style="display:none;">
 
-<div class="topbar">
-<div class="profile">
-<div class="avatar" id="avatar"></div>
-<div>
-<div class="username" id="usernameDisplay"></div>
-<div class="small" id="level"></div>
-</div>
-</div>
+<div class="nav">
+<button onclick="showSection('feed')">Inicio</button>
+<button onclick="showSection('today')">Mi Día</button>
+<button onclick="showSection('profile')">Perfil</button>
 <button onclick="logout()">Cerrar</button>
 </div>
 
-<h1 id="points">0</h1>
-<div class="progress"><div class="progress-bar" id="bar"></div></div>
-
-<div class="actions">
-<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
-<button onclick="addAction('Lectura',15)">Lectura +15</button>
-<button onclick="addAction('Disciplina',25)">Disciplina +25</button>
-<button onclick="addAction('Ayuda',30)">Ayuda +30</button>
-</div>
-
-<input id="customName" placeholder="Acción personalizada">
-<input id="customPoints" type="number" placeholder="Puntos">
-<button onclick="customAdd()">Agregar acción</button>
-
-<input id="newUsername" placeholder="Cambiar nombre de usuario">
-<input id="newAvatar" placeholder="URL imagen perfil">
-<button onclick="updateProfile()">Actualizar perfil</button>
-
-<div id="history"></div>
+<div id="feedSection" class="card"></div>
+<div id="todaySection" class="card" style="display:none;"></div>
+<div id="profileSection" class="card" style="display:none;"></div>
 
 </div>
 </div>
@@ -163,120 +98,18 @@ const client = window.supabase.createClient(
 );
 
 let user=null;
-let historyData=[];
-let username="";
-let avatar="";
 
-const levels=[
-{n:"Principiante",min:0,max:99},
-{n:"Disciplinado",min:100,max:299},
-{n:"Ejemplar",min:300,max:699},
-{n:"Mentor",min:700,max:1499},
-{n:"Leyenda",min:1500,max:999999}
-];
+function showSection(section){
+document.getElementById("feedSection").style.display="none";
+document.getElementById("todaySection").style.display="none";
+document.getElementById("profileSection").style.display="none";
 
-function calcPoints(){
-return historyData.reduce((sum,e)=>sum+e.puntos,0);
+if(section==="feed"){ loadFeed(); document.getElementById("feedSection").style.display="block";}
+if(section==="today"){ loadToday(); document.getElementById("todaySection").style.display="block";}
+if(section==="profile"){ loadProfile(); document.getElementById("profileSection").style.display="block";}
 }
 
-function updateUI(){
-let total=calcPoints();
-document.getElementById("points").innerText=total;
-
-let lvl=levels.find(l=>total>=l.min && total<=l.max);
-document.getElementById("level").innerText=lvl.n;
-
-let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
-document.getElementById("bar").style.width=percent+"%";
-
-document.getElementById("usernameDisplay").innerText=username||user.email;
-document.getElementById("avatar").style.backgroundImage=avatar?`url(${avatar})`:"none";
-
-renderHistory();
-}
-
-function renderHistory(){
-let div=document.getElementById("history");
-div.innerHTML="";
-historyData.slice().reverse().forEach(e=>{
-div.innerHTML+=`
-<div class="entry">
-<span>${e.accion}</span>
-<input type="number" value="${e.puntos}" onchange="editPoints('${e.id}',this.value)">
-<span class="delete" onclick="deleteEntry('${e.id}')">x</span>
-</div>`;
-});
-}
-
-function addAction(name,points){
-historyData.push({
-id:crypto.randomUUID(),
-accion:name,
-puntos:points,
-fecha:new Date().toISOString()
-});
-save();
-}
-
-function customAdd(){
-let n=document.getElementById("customName").value;
-let p=parseInt(document.getElementById("customPoints").value);
-if(!n||!p)return;
-addAction(n,p);
-document.getElementById("customName").value="";
-document.getElementById("customPoints").value="";
-}
-
-function editPoints(id,value){
-let entry=historyData.find(e=>e.id===id);
-entry.puntos=parseInt(value)||0;
-save();
-}
-
-function deleteEntry(id){
-historyData=historyData.filter(e=>e.id!==id);
-save();
-}
-
-async function updateProfile(){
-username=document.getElementById("newUsername").value||username;
-avatar=document.getElementById("newAvatar").value||avatar;
-
-await client.from("capital")
-.update({username,avatar})
-.eq("user_id",user.id);
-
-updateUI();
-}
-
-async function save(){
-await client.from("capital")
-.update({history:historyData})
-.eq("user_id",user.id);
-updateUI();
-}
-
-async function load(){
-const {data}=await client.from("capital")
-.select("*")
-.eq("user_id",user.id)
-.single();
-
-if(!data){
-await client.from("capital").insert({
-user_id:user.id,
-history:[],
-username:"",
-avatar:""
-});
-historyData=[];
-}else{
-historyData=data.history||[];
-username=data.username||"";
-avatar=data.avatar||"";
-}
-updateUI();
-}
+/* AUTH */
 
 async function register(){
 let email=document.getElementById("email").value;
@@ -297,7 +130,9 @@ start();
 async function start(){
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
-await load();
+
+await ensureProfile();
+showSection('feed');
 }
 
 async function logout(){
@@ -312,6 +147,123 @@ user=data.session.user;
 start();
 }
 })();
+
+/* PROFILE */
+
+async function ensureProfile(){
+const {data}=await client.from("profiles")
+.select("*")
+.eq("id",user.id)
+.single();
+
+if(!data){
+await client.from("profiles").insert({
+id:user.id,
+username:"",
+avatar_url:""
+});
+}
+}
+
+async function loadProfile(){
+const {data}=await client.from("profiles")
+.select("*")
+.eq("id",user.id)
+.single();
+
+document.getElementById("profileSection").innerHTML=`
+<h3>Perfil</h3>
+<div class="avatar" style="background-image:url(${data.avatar_url||""})"></div>
+<input type="file" onchange="uploadAvatar(event)">
+<input id="usernameInput" value="${data.username||""}" placeholder="Nombre de usuario">
+<button onclick="updateUsername()">Guardar</button>
+`;
+}
+
+async function updateUsername(){
+let value=document.getElementById("usernameInput").value;
+await client.from("profiles").update({username:value}).eq("id",user.id);
+loadProfile();
+}
+
+async function uploadAvatar(event){
+let file=event.target.files[0];
+let path=user.id+"/avatar.png";
+
+await client.storage.from("avatars").upload(path,file,{upsert:true});
+let {data}=client.storage.from("avatars").getPublicUrl(path);
+
+await client.from("profiles").update({avatar_url:data.publicUrl}).eq("id",user.id);
+loadProfile();
+}
+
+/* ACTIONS */
+
+async function addAction(name,points){
+await client.from("actions").insert({
+user_id:user.id,
+name,
+points
+});
+loadToday();
+loadFeed();
+}
+
+async function loadToday(){
+let today=new Date().toISOString().split("T")[0];
+
+const {data}=await client.from("actions")
+.select("*")
+.eq("user_id",user.id)
+.gte("created_at",today)
+.order("created_at",{ascending:false});
+
+let html="<h3>Hoy</h3>";
+html+=`<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
+<button onclick="addAction('Lectura',15)">Lectura +15</button>
+<button onclick="addAction('Disciplina',25)">Disciplina +25</button>
+<button onclick="addAction('Ayuda',30)">Ayuda +30</button>`;
+
+data.forEach(a=>{
+html+=`<div class="actionRow">
+<span>${a.name}</span>
+<span>+${a.points}</span>
+</div>`;
+});
+
+document.getElementById("todaySection").innerHTML=html;
+}
+
+/* FEED */
+
+async function loadFeed(){
+const {data}=await client.from("actions")
+.select("*, profiles(username,avatar_url)")
+.order("created_at",{ascending:false})
+.limit(50);
+
+let html="<h3>Actividad Reciente</h3>";
+
+data.forEach(a=>{
+html+=`
+<div class="feedItem">
+<div style="display:flex;align-items:center;gap:10px;">
+<div class="avatar" style="background-image:url(${a.profiles?.avatar_url||""})"></div>
+<div>
+<div>${a.profiles?.username||"Usuario"}</div>
+<div class="small">${new Date(a.created_at).toLocaleString()}</div>
+</div>
+</div>
+<div class="actionRow">
+<span>${a.name}</span>
+<span>+${a.points}</span>
+</div>
+</div>
+`;
+});
+
+document.getElementById("feedSection").innerHTML=html;
+}
 
 </script>
 </body>

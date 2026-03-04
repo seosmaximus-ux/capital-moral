@@ -2,265 +2,254 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Capital Moral</title>
+<title>Cyborg 2.0</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 body{
-  margin:0;
-  background:#0f0f0f;
-  color:#eaeaea;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+margin:0;
+font-family:Arial, sans-serif;
+background:#0d0d0d;
+color:white;
 }
+
 .container{
-  max-width:700px;
-  margin:40px auto;
-  padding:20px;
+padding:20px;
+max-width:500px;
+margin:auto;
 }
-.card{
-  background:#171717;
-  padding:20px;
-  border-radius:14px;
-  margin-bottom:20px;
+
+button{
+background:#1f1f1f;
+border:none;
+color:white;
+padding:10px;
+border-radius:8px;
+cursor:pointer;
 }
+
+button:hover{background:#2a2a2a;}
+
+input{
+background:#1a1a1a;
+border:none;
+color:white;
+padding:8px;
+border-radius:6px;
+}
+
 .nav{
-  display:flex;
-  gap:8px;
-  margin-bottom:20px;
+position:fixed;
+bottom:0;
+width:100%;
+display:flex;
+background:#111;
+border-top:1px solid #222;
 }
+
 .nav button{
-  flex:1;
+flex:1;
+border-radius:0;
+background:none;
+padding:15px;
 }
-button,input{
-  background:#222;
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:10px;
-  font-size:14px;
-}
-button:hover{ background:#333; cursor:pointer;}
-input{ width:100%; margin-top:10px;}
+
 .avatar{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  background:#222;
-  background-size:cover;
-  background-position:center;
+width:90px;
+height:90px;
+border-radius:50%;
+background:#222;
+background-size:cover;
+background-position:center;
 }
-.feedItem{
-  border-bottom:1px solid #222;
-  padding:12px 0;
-}
-.small{ font-size:12px; opacity:0.6; }
+
 .actionRow{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:13px;
-  padding:6px 0;
+display:grid;
+grid-template-columns: 1fr 70px 30px;
+align-items:center;
+gap:10px;
+margin-bottom:10px;
 }
-.deleteBtn{
-  font-size:12px;
-  opacity:0.4;
-  cursor:pointer;
+
+.pointsInput{
+width:60px;
+text-align:center;
 }
-.deleteBtn:hover{ opacity:1; }
-.grid2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:15px;
+
+.small{
+font-size:12px;
+opacity:0.6;
+margin-top:5px;
 }
 </style>
 </head>
+
 <body>
 
 <div class="container">
-
-<div id="loginBox" class="card">
-<h2>Capital Moral</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Contraseña">
-<button onclick="register()">Registrarse</button>
-<button onclick="login()">Entrar</button>
+<div id="content"></div>
 </div>
-
-<div id="app" style="display:none;">
 
 <div class="nav">
-<button onclick="showSection('feed')">Inicio</button>
-<button onclick="showSection('today')">Mi Día</button>
-<button onclick="showSection('profile')">Perfil</button>
-<button onclick="logout()">Cerrar</button>
-</div>
-
-<div id="feedSection" class="card"></div>
-<div id="todaySection" class="card" style="display:none;"></div>
-<div id="profileSection" class="card" style="display:none;"></div>
-
-</div>
+<button onclick="goHome()">Inicio</button>
+<button onclick="goToday()">Mi Día</button>
+<button onclick="goProfile()">Perfil</button>
 </div>
 
 <script>
 
-const client = window.supabase.createClient(
-"https://mlxcjgywjhtodcjjeiuv.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
-);
+const supabaseUrl="https://mlxcjgywjhtodcjjeiuv.supabase.co";
+const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc";
+const client=supabase.createClient(supabaseUrl,supabaseKey);
 
 let user=null;
 
-/* -------- AUTH -------- */
+/* ---------- AUTH ---------- */
 
-async function register(){
-let email=document.getElementById("email").value;
-let password=document.getElementById("password").value;
-await client.auth.signUp({email,password});
-alert("Usuario creado");
+async function init(){
+const {data}=await client.auth.getUser();
+if(data.user){
+user=data.user;
+goHome();
+}else{
+showAuth();
+}
+}
+
+function showAuth(){
+document.getElementById("content").innerHTML=`
+<h2>Login</h2>
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+<button onclick="login()">Entrar</button>
+<p id="authMsg"></p>
+`;
 }
 
 async function login(){
 let email=document.getElementById("email").value;
 let password=document.getElementById("password").value;
-const {data,error}=await client.auth.signInWithPassword({email,password});
-if(error){alert(error.message);return;}
-user=data.user;
-start();
-}
 
-async function start(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("app").style.display="block";
-await ensureProfile();
-showSection('feed');
-}
+const {error}=await client.auth.signInWithPassword({email,password});
 
-async function logout(){
-await client.auth.signOut();
+if(error){
+document.getElementById("authMsg").innerText=error.message;
+}else{
 location.reload();
 }
-
-(async ()=>{
-const { data } = await client.auth.getSession();
-if(data.session){
-user=data.session.user;
-start();
-}
-})();
-
-/* -------- NAV -------- */
-
-function showSection(section){
-document.getElementById("feedSection").style.display="none";
-document.getElementById("todaySection").style.display="none";
-document.getElementById("profileSection").style.display="none";
-
-if(section==="feed"){ loadFeed(); document.getElementById("feedSection").style.display="block";}
-if(section==="today"){ loadToday(); document.getElementById("todaySection").style.display="block";}
-if(section==="profile"){ loadProfile(); document.getElementById("profileSection").style.display="block";}
 }
 
-/* -------- PROFILE -------- */
+/* ---------- NAVEGACION ---------- */
 
-async function ensureProfile(){
-const {data}=await client.from("profiles")
-.select("*")
-.eq("id",user.id)
-.single();
+function goHome(){
+loadFeed();
+}
 
-if(!data){
-await client.from("profiles").insert({
-id:user.id,
-username:"",
-avatar_url:""
+function goToday(){
+loadToday();
+}
+
+function goProfile(){
+loadProfile();
+}
+
+/* ---------- HOME ---------- */
+
+async function loadFeed(){
+const {data}=await client.from("actions")
+.select("*,profiles(username,avatar_url)")
+.order("created_at",{ascending:false})
+.limit(20);
+
+let html="<h2>Feed</h2>";
+
+if(data){
+data.forEach(a=>{
+html+=`
+<div style="margin-bottom:15px;">
+<strong>${a.profiles?.username || "Usuario"}</strong>
+<br>${a.name} +${a.points}
+</div>
+`;
 });
 }
+
+document.getElementById("content").innerHTML=html;
 }
 
+/* ---------- PROFILE ---------- */
+
 async function loadProfile(){
+
 const {data}=await client.from("profiles")
 .select("*")
 .eq("id",user.id)
 .single();
 
-document.getElementById("profileSection").innerHTML=`
-<h3>${data.username || "Perfil"}</h3>
+let html=`
+<h2>Perfil</h2>
 
-<div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;">
-<div class="avatar" id="profileAvatar"
-style="background-image:url(${data.avatar_url||""})"></div>
+<div style="display:flex;gap:20px;align-items:center;margin-bottom:20px;">
+<div class="avatar" id="avatarPreview"
+style="background-image:url('${data.avatar_url || ""}')"></div>
+
 <div>
-<input type="file" id="avatarInput">
+<input type="file" id="avatarInput"><br><br>
 <button onclick="uploadAvatar()">Subir imagen</button>
 </div>
 </div>
 
-<input id="usernameInput" value="${data.username||""}" placeholder="Nombre de usuario">
+<h3>${data.username || "Sin nombre"}</h3>
+
+<input id="usernameInput" placeholder="Nuevo nombre"><br><br>
 <button onclick="updateUsername()">Guardar nombre</button>
-<div id="profileMessage" class="small"></div>
+
+<p id="profileMsg" class="small"></p>
 `;
-}
 
-async function updateUsername(){
-let value=document.getElementById("usernameInput").value;
-await client.from("profiles")
-.update({username:value})
-.eq("id",user.id);
-
-document.getElementById("profileMessage").innerText="Nombre actualizado";
+document.getElementById("content").innerHTML=html;
 }
 
 async function uploadAvatar(){
 let file=document.getElementById("avatarInput").files[0];
 if(!file) return;
 
-let path=user.id+"/avatar.png";
+let path=user.id+".png";
 
-await client.storage.from("avatars").upload(path,file,{upsert:true});
-let {data}=client.storage.from("avatars").getPublicUrl(path);
+await client.storage.from("avatars")
+.upload(path,file,{upsert:true});
+
+let {data}=client.storage.from("avatars")
+.getPublicUrl(path);
 
 await client.from("profiles")
 .update({avatar_url:data.publicUrl})
 .eq("id",user.id);
 
-document.getElementById("profileAvatar")
-.style.backgroundImage=`url(${data.publicUrl})`;
+document.getElementById("avatarPreview")
+.style.backgroundImage=`url('${data.publicUrl}?t=${new Date().getTime()}')`;
 
-document.getElementById("profileMessage").innerText="Imagen actualizada";
+document.getElementById("profileMsg").innerText="Imagen actualizada correctamente";
 }
 
-/* -------- ACTIONS -------- */
+async function updateUsername(){
+let value=document.getElementById("usernameInput").value;
+if(!value) return;
 
-async function addAction(name,points){
-await client.from("actions").insert({
-user_id:user.id,
-name,
-points
-});
-loadToday();
-loadFeed();
+await client.from("profiles")
+.update({username:value})
+.eq("id",user.id);
+
+document.getElementById("profileMsg").innerText="Nombre actualizado";
+document.getElementById("usernameInput").value="";
+loadProfile();
 }
 
-async function editAction(id,value){
-await client.from("actions")
-.update({points:parseInt(value)||0})
-.eq("id",id);
-
-loadToday();
-loadFeed();
-}
-
-async function deleteAction(id){
-await client.from("actions")
-.delete()
-.eq("id",id);
-
-loadToday();
-loadFeed();
-}
+/* ---------- MI DIA ---------- */
 
 async function loadToday(){
+
 let today=new Date().toISOString().split("T")[0];
 
 const {data}=await client.from("actions")
@@ -269,10 +258,10 @@ const {data}=await client.from("actions")
 .gte("created_at",today)
 .order("created_at",{ascending:false});
 
-let html="<h3>Hoy</h3>";
+let html="<h2>Mi Día</h2>";
 
 html+=`
-<div class="grid2">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
 <button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
 <button onclick="addAction('Lectura',15)">Lectura +15</button>
 <button onclick="addAction('Disciplina',25)">Disciplina +25</button>
@@ -280,54 +269,46 @@ html+=`
 </div>
 `;
 
+if(data){
 data.forEach(a=>{
 html+=`
 <div class="actionRow">
-<span>${a.name}</span>
-<input type="number" value="${a.points}"
-style="width:60px;background:#111;text-align:center;"
+<div>${a.name}</div>
+<input class="pointsInput" type="number" value="${a.points}"
 onchange="editAction('${a.id}',this.value)">
-<span class="deleteBtn"
-onclick="deleteAction('${a.id}')">x</span>
+<div style="cursor:pointer;" onclick="deleteAction('${a.id}')">✕</div>
 </div>
 `;
 });
-
-document.getElementById("todaySection").innerHTML=html;
 }
 
-/* -------- FEED -------- */
-
-async function loadFeed(){
-const {data}=await client.from("actions")
-.select("*, profiles(username,avatar_url)")
-.order("created_at",{ascending:false})
-.limit(50);
-
-let html="<h3>Actividad Reciente</h3>";
-
-data.forEach(a=>{
-html+=`
-<div class="feedItem">
-<div style="display:flex;align-items:center;gap:10px;">
-<div class="avatar"
-style="background-image:url(${a.profiles?.avatar_url||""})"></div>
-<div>
-<div>${a.profiles?.username||"Usuario"}</div>
-<div class="small">${new Date(a.created_at).toLocaleString()}</div>
-</div>
-</div>
-<div class="actionRow">
-<span>${a.name}</span>
-<span>+${a.points}</span>
-</div>
-</div>
-`;
-});
-
-document.getElementById("feedSection").innerHTML=html;
+document.getElementById("content").innerHTML=html;
 }
+
+async function addAction(name,points){
+await client.from("actions")
+.insert({user_id:user.id,name,points});
+loadToday();
+}
+
+async function editAction(id,value){
+await client.from("actions")
+.update({points:parseInt(value)})
+.eq("id",id);
+}
+
+async function deleteAction(id){
+await client.from("actions")
+.delete()
+.eq("id",id);
+loadToday();
+}
+
+/* ---------- INIT ---------- */
+
+init();
 
 </script>
+
 </body>
 </html>

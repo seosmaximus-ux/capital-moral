@@ -5,17 +5,81 @@
 <title>Capital Moral</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{margin:0;background:#0f0f0f;color:#eaeaea;font-family:-apple-system;}
-.container{max-width:500px;margin:60px auto;padding:20px;}
-.card{background:#171717;padding:25px;border-radius:12px;}
-input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px;}
-input{background:#222;color:white;}
-button{background:#2c2c2c;color:white;cursor:pointer;}
-button:hover{background:#3a3a3a;}
-.entry{border-bottom:1px solid #222;padding:8px 0;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
-.small{font-size:11px;opacity:0.5;}
-.progress{height:6px;background:#222;border-radius:10px;margin-top:10px;}
-.progress-bar{height:6px;background:white;width:0%;border-radius:10px;}
+body{
+  margin:0;
+  background:#0f0f0f;
+  color:#eaeaea;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+}
+.container{
+  max-width:500px;
+  margin:60px auto;
+  padding:20px;
+}
+.card{
+  background:#171717;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+}
+input{
+  background:#222;
+  color:white;
+}
+button{
+  background:#2c2c2c;
+  color:white;
+  cursor:pointer;
+  transition:0.2s;
+}
+button:hover{
+  background:#3a3a3a;
+}
+.progress{
+  height:8px;
+  background:#222;
+  border-radius:10px;
+  margin-top:10px;
+}
+.progress-bar{
+  height:8px;
+  background:white;
+  width:0%;
+  border-radius:10px;
+  transition:0.4s;
+}
+.small{
+  font-size:12px;
+  opacity:0.6;
+}
+.history{
+  margin-top:20px;
+  font-size:13px;
+  max-height:150px;
+  overflow:auto;
+}
+.entry{
+  border-bottom:1px solid #222;
+  padding:6px 0;
+  display:flex;
+  justify-content:space-between;
+}
+.entry span{
+  cursor:pointer;
+}
+.entry button{
+  width:auto;
+  padding:4px 8px;
+  font-size:11px;
+}
 </style>
 </head>
 <body>
@@ -34,16 +98,16 @@ button:hover{background:#3a3a3a;}
 <div id="userEmail" class="small"></div>
 <h2 id="level"></h2>
 <h1 id="points">0</h1>
-<div class="progress"><div class="progress-bar" id="bar"></div></div>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
 <button onclick="quickAdd('Ejercicio',20)">Ejercicio +20</button>
 <button onclick="quickAdd('Lectura',15)">Lectura +15</button>
 
 <input id="customName" placeholder="Acción personalizada">
 <input id="customPoints" type="number" placeholder="Puntos">
-<button onclick="customAdd()">Agregar</button>
+<button onclick="customAdd()">Agregar acción</button>
 
-<div id="history"></div>
+<div class="history" id="history"></div>
 
 <button onclick="logout()">Cerrar sesión</button>
 </div>
@@ -54,7 +118,7 @@ button:hover{background:#3a3a3a;}
 
 const client = window.supabase.createClient(
 "https://mlxcjgywjhtodcjjeiuv.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+"PEGA_AQUI_TU_ANON_PUBLIC_KEY_REAL"
 );
 
 let user=null;
@@ -80,19 +144,19 @@ let lvl=levels.find(l=>total>=l.min && total<=l.max);
 document.getElementById("level").innerText=lvl.n;
 
 let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
-document.getElementById("bar").style.width=percent+"%";
+document.getElementById("progressBar").style.width=percent+"%";
 
 renderHistory();
 }
 
 function renderHistory(){
-let div=document.getElementById("history");
-div.innerHTML="";
-historyData.slice().reverse().forEach(e=>{
-div.innerHTML+=`
+let container=document.getElementById("history");
+container.innerHTML="";
+historyData.slice().reverse().forEach(entry=>{
+container.innerHTML+=`
 <div class="entry">
-<span onclick="editEntry('${e.id}')">${e.accion} +${e.puntos}</span>
-<button onclick="deleteEntry('${e.id}')">X</button>
+<span onclick="editEntry('${entry.id}')">${entry.accion} +${entry.puntos}</span>
+<button onclick="deleteEntry('${entry.id}')">X</button>
 </div>`;
 });
 }
@@ -110,7 +174,7 @@ save();
 function customAdd(){
 let n=document.getElementById("customName").value;
 let p=parseInt(document.getElementById("customPoints").value);
-if(!n || !p) return;
+if(!n||!p) return;
 quickAdd(n,p);
 document.getElementById("customName").value="";
 document.getElementById("customPoints").value="";
@@ -179,6 +243,15 @@ async function logout(){
 await client.auth.signOut();
 location.reload();
 }
+
+/* 🔥 RESTAURAR SESIÓN AUTOMÁTICAMENTE */
+window.addEventListener("load", async ()=>{
+const {data}=await client.auth.getSession();
+if(data.session){
+user=data.session.user;
+start();
+}
+});
 
 </script>
 </body>

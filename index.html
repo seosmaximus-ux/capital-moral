@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Capital Moral</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,301 +14,90 @@ body{
   background:#f4f6f8;
   color:#1a1a1a;
 }
-
-/* NAVBAR */
-.navbar{
-  background:white;
-  padding:16px 32px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:0 1px 6px rgba(0,0,0,0.05);
-}
-
-.navbar h1{
-  font-size:20px;
-  font-weight:600;
-  margin:0;
-}
-
-.nav-links{
-  display:flex;
-  gap:24px;
-}
-
-.nav-links button{
-  background:none;
-  border:none;
-  font-size:14px;
-  cursor:pointer;
-  color:#555;
-}
-
-.nav-links button:hover{
-  color:black;
-}
-
-.logout{
-  background:#111;
-  color:white;
-  border:none;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:13px;
-}
-
-/* CONTENIDO */
 .container{
-  max-width:900px;
-  margin:40px auto;
-  padding:0 20px;
+  max-width:400px;
+  margin:100px auto;
+  padding:20px;
 }
-
-.section{
-  display:none;
-}
-
-.section.active{
-  display:block;
-}
-
-/* TARJETAS */
 .card{
   background:white;
-  padding:24px;
+  padding:30px;
   border-radius:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.05);
-  margin-bottom:30px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
-
-/* ACCIONES GRID */
-.actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px;
-  margin-top:20px;
-}
-
-.action{
-  background:#fafafa;
-  padding:16px;
-  border-radius:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border:1px solid #eee;
-}
-
-.action button{
-  background:#111;
-  color:white;
-  border:none;
-  padding:6px 12px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:12px;
-}
-
-/* HISTORIAL */
-.history{
-  max-height:350px;
-  overflow-y:auto;
-  margin-top:20px;
-}
-
-.history-item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px;
-  border-bottom:1px solid #eee;
-  font-size:14px;
-}
-
-.history-item small{
-  color:#777;
-  font-size:11px;
-}
-
-.delete-btn{
-  background:none;
-  border:none;
-  font-size:12px;
-  cursor:pointer;
-  color:#999;
-}
-
-.delete-btn:hover{
-  color:red;
-}
-
-/* FORM */
 input{
+  width:100%;
   padding:10px;
+  margin-bottom:15px;
   border-radius:6px;
   border:1px solid #ddd;
-  font-size:14px;
 }
-
-.custom-action{
-  display:flex;
-  gap:10px;
-  margin-top:20px;
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#111;
+  color:white;
+  cursor:pointer;
+  margin-bottom:10px;
 }
 </style>
 </head>
 <body>
 
-<div id="auth-container" class="container">
+<div class="container">
   <div class="card">
-    <h2>Iniciar sesión</h2>
+    <h2>Capital Moral</h2>
     <br>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Contraseña"><br><br>
-    <button onclick="login()">Entrar</button>
-    <button onclick="register()">Registrarse</button>
-  </div>
-</div>
-
-<div id="app" style="display:none;">
-  <div class="navbar">
-    <h1>Capital Moral</h1>
-    <div class="nav-links">
-      <button onclick="showSection('home')">Inicio</button>
-      <button onclick="showSection('history')">Historial</button>
-      <button onclick="showSection('donations')">Donaciones</button>
-    </div>
-    <button class="logout" onclick="logout()">Cerrar sesión</button>
-  </div>
-
-  <div class="container">
-
-    <!-- INICIO -->
-    <div id="home" class="section active">
-      <div class="card">
-        <h2>Acciones</h2>
-
-        <div class="actions">
-          <div class="action">Leer 30 min <button onclick="addPoints(10,'Leer 30 min')">+10</button></div>
-          <div class="action">Entrenar <button onclick="addPoints(15,'Entrenar')">+15</button></div>
-          <div class="action">Meditar <button onclick="addPoints(8,'Meditar')">+8</button></div>
-          <div class="action">Ayudar a alguien <button onclick="addPoints(20,'Ayudar a alguien')">+20</button></div>
-          <div class="action">Estudiar 1h <button onclick="addPoints(12,'Estudiar 1h')">+12</button></div>
-          <div class="action">Cuidar el cuerpo <button onclick="addPoints(10,'Cuidar el cuerpo')">+10</button></div>
-        </div>
-
-        <div class="custom-action">
-          <input type="text" id="customName" placeholder="Acción personalizada">
-          <input type="number" id="customPoints" placeholder="Puntos">
-          <button onclick="addCustom()">Agregar</button>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- HISTORIAL -->
-    <div id="history" class="section">
-      <div class="card">
-        <h2>Historial</h2>
-        <div class="history" id="historyList"></div>
-      </div>
-    </div>
-
-    <!-- DONACIONES -->
-    <div id="donations" class="section">
-      <div class="card">
-        <h2>Donaciones</h2>
-        <p>Próximamente podrás donar puntos a causas.</p>
-      </div>
-    </div>
-
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button id="loginBtn">Entrar</button>
+    <button id="registerBtn">Registrarse</button>
   </div>
 </div>
 
 <script>
-const supabase = window.supabase.createClient(
-  "https://mlxcjgywjhtodcjjeiuv.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
-);
+document.addEventListener("DOMContentLoaded", function(){
 
-async function login(){
-  const email=document.getElementById('email').value;
-  const password=document.getElementById('password').value;
-  await supabase.auth.signInWithPassword({email,password});
-}
+  const supabase = window.supabase.createClient(
+    "https://mlxcjgywjhtodcjjeiuv.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+  );
 
-async function register(){
-  const email=document.getElementById('email').value;
-  const password=document.getElementById('password').value;
-  await supabase.auth.signUp({email,password});
-}
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
 
-async function logout(){
-  await supabase.auth.signOut();
-}
+  loginBtn.addEventListener("click", async function(){
+    const { error } = await supabase.auth.signInWithPassword({
+      email: emailInput.value,
+      password: passwordInput.value
+    });
 
-supabase.auth.onAuthStateChange((event, session)=>{
-  if(session){
-    document.getElementById("auth-container").style.display="none";
-    document.getElementById("app").style.display="block";
-    loadHistory();
-  }else{
-    document.getElementById("auth-container").style.display="block";
-    document.getElementById("app").style.display="none";
-  }
-});
-
-async function addPoints(points,name){
-  const user = (await supabase.auth.getUser()).data.user;
-  await supabase.from("capital_history").insert([{
-    user_id:user.id,
-    action_name:name,
-    points:points
-  }]);
-  loadHistory();
-}
-
-async function addCustom(){
-  const name=document.getElementById('customName').value;
-  const points=parseInt(document.getElementById('customPoints').value);
-  addPoints(points,name);
-}
-
-async function loadHistory(){
-  const user = (await supabase.auth.getUser()).data.user;
-  const {data} = await supabase
-  .from("capital_history")
-  .select("*")
-  .eq("user_id",user.id)
-  .order("created_at",{ascending:false});
-
-  const list=document.getElementById("historyList");
-  list.innerHTML="";
-
-  data.forEach(item=>{
-    const div=document.createElement("div");
-    div.className="history-item";
-    div.innerHTML=`
-      <div>
-        ${item.action_name} (+${item.points})
-        <br><small>${new Date(item.created_at).toLocaleString()}</small>
-      </div>
-      <button class="delete-btn" onclick="deleteItem('${item.id}')">Eliminar</button>
-    `;
-    list.appendChild(div);
+    if(error){
+      alert(error.message);
+    } else {
+      alert("Login correcto");
+      location.reload();
+    }
   });
-}
 
-async function deleteItem(id){
-  await supabase.from("capital_history").delete().eq("id",id);
-  loadHistory();
-}
+  registerBtn.addEventListener("click", async function(){
+    const { error } = await supabase.auth.signUp({
+      email: emailInput.value,
+      password: passwordInput.value
+    });
 
-function showSection(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
+    if(error){
+      alert(error.message);
+    } else {
+      alert("Usuario registrado");
+    }
+  });
+
+});
 </script>
 
 </body>

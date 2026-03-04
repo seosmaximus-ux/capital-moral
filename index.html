@@ -13,19 +13,34 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 .container{
-  max-width:520px;
-  margin:60px auto;
-  padding:20px;
+  max-width:540px;
+  margin:80px auto;
+  padding:24px;
 }
 .card{
   background:#171717;
-  padding:28px;
-  border-radius:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  padding:36px;
+  border-radius:16px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.6);
+  position:relative;
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.logout{
+  font-size:12px;
+  opacity:0.5;
+  cursor:pointer;
+}
+.logout:hover{
+  opacity:1;
 }
 h1{
-  margin:10px 0;
-  font-size:42px;
+  margin:20px 0 10px 0;
+  font-size:44px;
   font-weight:600;
 }
 h2{
@@ -33,9 +48,9 @@ h2{
   font-weight:500;
 }
 input,button{
-  padding:10px;
+  padding:12px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   font-size:14px;
   width:100%;
 }
@@ -55,14 +70,14 @@ button:hover{
 .actions{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:15px;
+  gap:14px;
+  margin:30px 0;
 }
 .progress{
   height:6px;
   background:#222;
   border-radius:10px;
-  margin-top:12px;
+  margin-top:16px;
 }
 .progress-bar{
   height:6px;
@@ -76,31 +91,33 @@ button:hover{
   opacity:0.6;
 }
 .history{
-  margin-top:20px;
+  margin-top:30px;
   font-size:13px;
-  max-height:260px;
+  max-height:420px;
   overflow-y:auto;
-  padding-right:4px;
+  padding-right:6px;
 }
 .entry{
+  padding:14px 0;
+  border-bottom:1px solid #222;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.entry-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:6px 0;
-  border-bottom:1px solid #222;
-}
-.entry span{
-  flex:1;
 }
 .entry input{
-  width:60px;
+  width:70px;
   font-size:12px;
-  padding:4px;
+  padding:6px;
   text-align:center;
 }
 .delete{
   background:none;
-  color:#888;
+  color:#666;
   font-size:12px;
   padding:4px;
   width:auto;
@@ -108,10 +125,17 @@ button:hover{
 .delete:hover{
   color:white;
 }
+.date{
+  font-size:11px;
+  opacity:0.4;
+}
 .streak{
-  margin-top:8px;
+  margin-top:10px;
   font-size:13px;
   opacity:0.7;
+}
+.section{
+  margin-top:25px;
 }
 </style>
 </head>
@@ -124,16 +148,29 @@ button:hover{
 <h2>Capital Moral</h2>
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Contraseña">
+<div class="section">
 <button onclick="register()">Registrarse</button>
 <button onclick="login()">Entrar</button>
 </div>
+</div>
 
 <div class="card" id="app" style="display:none;">
+
+<div class="topbar">
 <div id="userEmail" class="small"></div>
+<div class="logout" onclick="logout()">Cerrar sesión</div>
+</div>
+
 <h2 id="level"></h2>
 <h1 id="points">0</h1>
-<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-<div class="streak">Racha: <span id="streak">0</span> días</div>
+
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="streak">
+Racha: <span id="streak">0</span> días
+</div>
 
 <div class="actions">
 <button onclick="quickAdd('Ejercicio',20)">Ejercicio +20</button>
@@ -146,11 +183,12 @@ button:hover{
 
 <input id="customName" placeholder="Acción personalizada">
 <input id="customPoints" type="number" placeholder="Puntos">
+<div class="section">
 <button onclick="customAdd()">Agregar acción</button>
+</div>
 
 <div class="history" id="history"></div>
 
-<button onclick="logout()">Cerrar sesión</button>
 </div>
 
 </div>
@@ -196,15 +234,25 @@ document.getElementById("streak").innerText=streak;
 renderHistory();
 }
 
+function formatDate(dateString){
+let d=new Date(dateString);
+return d.toLocaleDateString()+" · "+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
 function renderHistory(){
 let container=document.getElementById("history");
 container.innerHTML="";
 historyData.slice().reverse().forEach(entry=>{
 container.innerHTML+=`
 <div class="entry">
+<div class="entry-top">
 <span>${entry.accion}</span>
+<div>
 <input type="number" value="${entry.puntos}" onchange="editPoints('${entry.id}',this.value)">
 <button class="delete" onclick="deleteEntry('${entry.id}')">✕</button>
+</div>
+</div>
+<div class="date">${formatDate(entry.fecha)}</div>
 </div>`;
 });
 }

@@ -12,20 +12,41 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 }
 .container{
-  max-width:500px;
+  max-width:520px;
   margin:60px auto;
   padding:20px;
 }
 .card{
   background:#171717;
   padding:25px;
-  border-radius:12px;
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
+  border-radius:14px;
+  box-shadow:0 0 25px rgba(0,0,0,0.5);
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.profile{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.avatar{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:#222;
+  background-size:cover;
+  background-position:center;
+}
+.username{
+  font-size:14px;
+  font-weight:600;
 }
 input,button{
-  width:100%;
   padding:10px;
-  margin-top:10px;
   border:none;
   border-radius:8px;
   font-size:14px;
@@ -33,6 +54,8 @@ input,button{
 input{
   background:#222;
   color:white;
+  width:100%;
+  margin-top:10px;
 }
 button{
   background:#2c2c2c;
@@ -41,6 +64,12 @@ button{
   transition:0.2s;
 }
 button:hover{ background:#3a3a3a; }
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:20px;
+}
 .progress{
   height:8px;
   background:#222;
@@ -57,10 +86,24 @@ button:hover{ background:#3a3a3a; }
 .entry{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   border-bottom:1px solid #222;
   padding:6px 0;
   font-size:13px;
 }
+.entry input{
+  width:60px;
+  background:#111;
+  text-align:center;
+  padding:4px;
+  font-size:12px;
+}
+.delete{
+  font-size:11px;
+  opacity:0.5;
+  cursor:pointer;
+}
+.delete:hover{ opacity:1; }
 .small{ font-size:12px; opacity:0.6; }
 </style>
 </head>
@@ -77,23 +120,39 @@ button:hover{ background:#3a3a3a; }
 </div>
 
 <div class="card" id="app" style="display:none;">
-<div id="userEmail" class="small"></div>
-<h2 id="level"></h2>
+
+<div class="topbar">
+<div class="profile">
+<div class="avatar" id="avatar"></div>
+<div>
+<div class="username" id="usernameDisplay"></div>
+<div class="small" id="level"></div>
+</div>
+</div>
+<button onclick="logout()">Cerrar</button>
+</div>
+
 <h1 id="points">0</h1>
 <div class="progress"><div class="progress-bar" id="bar"></div></div>
 
+<div class="actions">
 <button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
 <button onclick="addAction('Lectura',15)">Lectura +15</button>
+<button onclick="addAction('Disciplina',25)">Disciplina +25</button>
+<button onclick="addAction('Ayuda',30)">Ayuda +30</button>
+</div>
 
 <input id="customName" placeholder="Acción personalizada">
 <input id="customPoints" type="number" placeholder="Puntos">
 <button onclick="customAdd()">Agregar acción</button>
 
+<input id="newUsername" placeholder="Cambiar nombre de usuario">
+<input id="newAvatar" placeholder="URL imagen perfil">
+<button onclick="updateProfile()">Actualizar perfil</button>
+
 <div id="history"></div>
 
-<button onclick="logout()">Cerrar sesión</button>
 </div>
-
 </div>
 
 <script>
@@ -105,6 +164,8 @@ const client = window.supabase.createClient(
 
 let user=null;
 let historyData=[];
+let username="";
+let avatar="";
 
 const levels=[
 {n:"Principiante",min:0,max:99},
@@ -128,6 +189,9 @@ document.getElementById("level").innerText=lvl.n;
 let percent=((total-lvl.min)/(lvl.max-lvl.min))*100;
 document.getElementById("bar").style.width=percent+"%";
 
+document.getElementById("usernameDisplay").innerText=username||user.email;
+document.getElementById("avatar").style.backgroundImage=avatar?`url(${avatar})`:"none";
+
 renderHistory();
 }
 
@@ -137,8 +201,9 @@ div.innerHTML="";
 historyData.slice().reverse().forEach(e=>{
 div.innerHTML+=`
 <div class="entry">
-<span onclick="editEntry('${e.id}')">${e.accion} +${e.puntos}</span>
-<button onclick="deleteEntry('${e.id}')">X</button>
+<span>${e.accion}</span>
+<input type="number" value="${e.puntos}" onchange="editPoints('${e.id}',this.value)">
+<span class="delete" onclick="deleteEntry('${e.id}')">x</span>
 </div>`;
 });
 }
@@ -162,18 +227,26 @@ document.getElementById("customName").value="";
 document.getElementById("customPoints").value="";
 }
 
+function editPoints(id,value){
+let entry=historyData.find(e=>e.id===id);
+entry.puntos=parseInt(value)||0;
+save();
+}
+
 function deleteEntry(id){
 historyData=historyData.filter(e=>e.id!==id);
 save();
 }
 
-function editEntry(id){
-let entry=historyData.find(e=>e.id===id);
-let newPoints=parseInt(prompt("Modificar puntos:",entry.puntos));
-if(!isNaN(newPoints)){
-entry.puntos=newPoints;
-save();
-}
+async function updateProfile(){
+username=document.getElementById("newUsername").value||username;
+avatar=document.getElementById("newAvatar").value||avatar;
+
+await client.from("capital")
+.update({username,avatar})
+.eq("user_id",user.id);
+
+updateUI();
 }
 
 async function save(){
@@ -190,10 +263,17 @@ const {data}=await client.from("capital")
 .single();
 
 if(!data){
-await client.from("capital").insert({user_id:user.id,history:[]});
+await client.from("capital").insert({
+user_id:user.id,
+history:[],
+username:"",
+avatar:""
+});
 historyData=[];
 }else{
 historyData=data.history||[];
+username=data.username||"";
+avatar=data.avatar||"";
 }
 updateUI();
 }
@@ -217,7 +297,6 @@ start();
 async function start(){
 document.getElementById("loginBox").style.display="none";
 document.getElementById("app").style.display="block";
-document.getElementById("userEmail").innerText=user.email;
 await load();
 }
 
@@ -226,7 +305,6 @@ await client.auth.signOut();
 location.reload();
 }
 
-/* 🔥 AUTO SESIÓN AL RECARGAR */
 (async ()=>{
 const { data } = await client.auth.getSession();
 if(data.session){

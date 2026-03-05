@@ -104,13 +104,31 @@ display:block;
 font-size:46px;
 font-weight:700;
 text-align:center;
-margin:15px 0;
+margin:10px 0;
+transition:transform .25s;
 }
 
-.label{
+.level{
 text-align:center;
-font-size:13px;
-opacity:0.6;
+font-size:14px;
+opacity:0.8;
+margin-bottom:10px;
+}
+
+.progress{
+width:100%;
+height:8px;
+background:#222;
+border-radius:10px;
+overflow:hidden;
+margin-top:10px;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:#3cff8a;
+transition:width .4s;
 }
 
 .actions{
@@ -194,7 +212,12 @@ font-size:12px;
 </div>
 
 <div class="points" id="capital">0</div>
-<div class="label">Capital Moral</div>
+
+<div class="level" id="levelName">Nivel</div>
+
+<div class="progress">
+<div class="bar" id="progressBar"></div>
+</div>
 
 <input type="file" id="file">
 <button onclick="uploadAvatar()">Actualizar avatar</button>
@@ -228,6 +251,14 @@ const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 const client=supabase.createClient(supabaseUrl,supabaseKey)
 
 let user=null
+
+const levels=[
+{points:0,name:"Iniciado"},
+{points:100,name:"Honorable"},
+{points:300,name:"Virtuoso"},
+{points:700,name:"Sabio"},
+{points:1500,name:"Maestro Moral"}
+]
 
 async function register(){
 
@@ -280,6 +311,12 @@ await client
 .from("actions")
 .insert({user_id:user.id,name,points})
 
+document.getElementById("capital").style.transform="scale(1.15)"
+
+setTimeout(()=>{
+document.getElementById("capital").style.transform="scale(1)"
+},200)
+
 loadActions()
 
 }
@@ -292,6 +329,29 @@ await client
 .eq("id",id)
 
 loadActions()
+
+}
+
+function calculateLevel(total){
+
+let level=levels[0]
+
+for(let i=0;i<levels.length;i++){
+if(total>=levels[i].points) level=levels[i]
+}
+
+let next=levels.find(l=>l.points>level.points)
+
+let progress=0
+
+if(next){
+progress=((total-level.points)/(next.points-level.points))*100
+}else{
+progress=100
+}
+
+document.getElementById("levelName").innerText=level.name
+document.getElementById("progressBar").style.width=progress+"%"
 
 }
 
@@ -326,6 +386,8 @@ feed.appendChild(div)
 })
 
 document.getElementById("capital").innerText=total
+
+calculateLevel(total)
 
 }
 

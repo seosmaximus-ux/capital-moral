@@ -18,7 +18,7 @@ margin:0;
 }
 
 .container{
-max-width:520px;
+max-width:540px;
 margin:auto;
 padding:30px 20px;
 }
@@ -27,14 +27,14 @@ h1{
 font-size:28px;
 font-weight:600;
 letter-spacing:1px;
-margin-bottom:30px;
+margin-bottom:25px;
 }
 
 .card{
 background:#151515;
 border-radius:16px;
-padding:24px;
-margin-bottom:20px;
+padding:22px;
+margin-bottom:18px;
 box-shadow:0 10px 30px rgba(0,0,0,0.6);
 }
 
@@ -82,8 +82,8 @@ cursor:pointer;
 }
 
 .avatar{
-width:120px;
-height:120px;
+width:110px;
+height:110px;
 border-radius:50%;
 overflow:hidden;
 margin:auto;
@@ -97,7 +97,6 @@ justify-content:center;
 width:100%;
 height:100%;
 object-fit:cover;
-display:block;
 }
 
 .points{
@@ -105,14 +104,12 @@ font-size:46px;
 font-weight:700;
 text-align:center;
 margin:10px 0;
-transition:transform .25s;
 }
 
 .level{
 text-align:center;
 font-size:14px;
-opacity:0.8;
-margin-bottom:10px;
+opacity:0.7;
 }
 
 .progress{
@@ -140,7 +137,6 @@ gap:10px;
 .actions button{
 background:#222;
 color:white;
-font-weight:500;
 }
 
 .feed .item{
@@ -152,30 +148,38 @@ border-bottom:1px solid #222;
 font-size:14px;
 }
 
-.name{
-flex:1;
-}
-
 .value{
 width:60px;
 text-align:center;
 font-weight:600;
 }
 
-.pos{
-color:#3cff8a;
-}
-
-.neg{
-color:#ff5b5b;
-}
+.pos{color:#3cff8a;}
+.neg{color:#ff5b5b;}
 
 .delete{
 background:#333;
-padding:5px 8px;
+padding:4px 7px;
 border-radius:6px;
 cursor:pointer;
 font-size:12px;
+}
+
+.rankItem{
+display:flex;
+justify-content:space-between;
+padding:10px 0;
+border-bottom:1px solid #222;
+font-size:14px;
+}
+
+.badge{
+background:#222;
+padding:6px 10px;
+border-radius:20px;
+font-size:12px;
+display:inline-block;
+margin:4px;
 }
 
 </style>
@@ -208,12 +212,12 @@ font-size:12px;
 </div>
 
 <div class="avatar">
-<img id="avatarImg" src="">
+<img id="avatarImg">
 </div>
 
 <div class="points" id="capital">0</div>
 
-<div class="level" id="levelName">Nivel</div>
+<div class="level" id="levelName"></div>
 
 <div class="progress">
 <div class="bar" id="progressBar"></div>
@@ -237,7 +241,20 @@ font-size:12px;
 
 </div>
 
-<div class="card feed" id="feed"></div>
+<div class="card">
+<h3>Historial</h3>
+<div id="feed" class="feed"></div>
+</div>
+
+<div class="card">
+<h3>Logros</h3>
+<div id="achievements"></div>
+</div>
+
+<div class="card">
+<h3>Ranking Global</h3>
+<div id="ranking"></div>
+</div>
 
 </div>
 
@@ -287,10 +304,8 @@ start()
 }
 
 async function logout(){
-
 await client.auth.signOut()
 location.reload()
-
 }
 
 async function start(){
@@ -302,6 +317,8 @@ document.getElementById("userEmail").innerText=user.email
 
 loadAvatar()
 loadActions()
+loadRanking()
+loadAchievements()
 
 }
 
@@ -310,12 +327,6 @@ async function addAction(name,points){
 await client
 .from("actions")
 .insert({user_id:user.id,name,points})
-
-document.getElementById("capital").style.transform="scale(1.15)"
-
-setTimeout(()=>{
-document.getElementById("capital").style.transform="scale(1)"
-},200)
 
 loadActions()
 
@@ -376,7 +387,7 @@ const div=document.createElement("div")
 div.className="item"
 
 div.innerHTML=`
-<div class="name">${a.name}</div>
+<div>${a.name}</div>
 <div class="value ${a.points>0?'pos':'neg'}">${a.points>0?'+':''}${a.points}</div>
 <div class="delete" onclick="deleteAction('${a.id}')">X</div>
 `
@@ -388,6 +399,87 @@ feed.appendChild(div)
 document.getElementById("capital").innerText=total
 
 calculateLevel(total)
+
+checkAchievements(total)
+
+}
+
+async function checkAchievements(points){
+
+if(points>=100) unlock("Primer Nivel")
+if(points>=300) unlock("Virtuoso")
+if(points>=700) unlock("Sabio")
+if(points>=1500) unlock("Maestro Moral")
+
+}
+
+async function unlock(name){
+
+const {data}=await client
+.from("achievements")
+.select("*")
+.eq("user_id",user.id)
+.eq("name",name)
+
+if(data.length===0){
+
+await client
+.from("achievements")
+.insert({user_id:user.id,name})
+
+loadAchievements()
+
+}
+
+}
+
+async function loadAchievements(){
+
+const {data}=await client
+.from("achievements")
+.select("*")
+.eq("user_id",user.id)
+
+const box=document.getElementById("achievements")
+
+box.innerHTML=""
+
+data.forEach(a=>{
+box.innerHTML+=`<div class="badge">${a.name}</div>`
+})
+
+}
+
+async function loadRanking(){
+
+const {data}=await client
+.from("actions")
+.select("user_id,points")
+
+let totals={}
+
+data.forEach(a=>{
+totals[a.user_id]=(totals[a.user_id]||0)+a.points
+})
+
+const arr=Object.entries(totals)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,10)
+
+const box=document.getElementById("ranking")
+box.innerHTML=""
+
+arr.forEach((r,i)=>{
+
+box.innerHTML+=`
+<div class="rankItem">
+<div>#${i+1}</div>
+<div>${r[0].slice(0,6)}</div>
+<div>${r[1]}</div>
+</div>
+`
+
+})
 
 }
 
@@ -425,22 +517,16 @@ const {data}=await client
 .single()
 
 if(data && data.avatar_url){
-
 document.getElementById("avatarImg").src=data.avatar_url
-
 }
 
 }
 
 client.auth.getSession().then(({data})=>{
-
 if(data.session){
-
 user=data.session.user
 start()
-
 }
-
 })
 
 </script>

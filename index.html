@@ -10,8 +10,8 @@
 <style>
 
 body{
-background:#000;
-color:#fff;
+background:black;
+color:white;
 font-family:Arial;
 text-align:center;
 padding:40px;
@@ -19,46 +19,63 @@ padding:40px;
 
 input{
 padding:10px;
+margin:5px;
 border:none;
 border-radius:6px;
-margin:5px;
 }
 
 button{
-padding:10px 16px;
+padding:10px 14px;
+margin:5px;
 border:none;
 border-radius:6px;
 background:white;
 color:black;
 cursor:pointer;
-margin:5px;
 }
 
 button:hover{
-opacity:0.8;
+opacity:0.85;
 }
 
 #avatar{
-width:90px;
-height:90px;
+width:100px;
+height:100px;
 border-radius:50%;
 object-fit:cover;
+display:block;
+margin:auto;
 background:#222;
-margin-bottom:20px;
 }
 
 #feed{
-max-width:400px;
+max-width:420px;
 margin:auto;
-text-align:left;
 margin-top:30px;
+text-align:left;
 }
 
 .item{
-padding:10px;
-border-bottom:1px solid #333;
 display:flex;
 justify-content:space-between;
+align-items:center;
+padding:10px;
+border-bottom:1px solid #333;
+}
+
+.name{
+flex:1;
+}
+
+.points{
+width:60px;
+text-align:center;
+}
+
+.delete{
+background:#ff4444;
+color:white;
+padding:5px 8px;
 }
 
 </style>
@@ -87,15 +104,15 @@ justify-content:space-between;
 
 <h2 id="capital">0</h2>
 
-<button onclick="addAction(10)">+10 buena acción</button>
-<button onclick="addAction(-5)">-5 mala acción</button>
+<br>
+
+<button onclick="addAction('Ayudar a alguien',10)">+ Ayudar</button>
+<button onclick="addAction('Mentir',-5)">- Mentir</button>
+<button onclick="addAction('Ser generoso',8)">+ Generosidad</button>
 
 <br><br>
 
 <input type="file" id="file">
-
-<br>
-
 <button onclick="uploadAvatar()">Subir avatar</button>
 
 <br><br>
@@ -120,17 +137,13 @@ async function register(){
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {data,error}=await client.auth.signUp({
-email:email,
-password:password
+const {error}=await client.auth.signUp({
+email,
+password
 })
 
-if(error){
-alert(error.message)
-return
-}
-
-alert("Usuario creado")
+if(error) alert(error.message)
+else alert("Usuario creado")
 
 }
 
@@ -140,8 +153,8 @@ const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
 const {data,error}=await client.auth.signInWithPassword({
-email:email,
-password:password
+email,
+password
 })
 
 if(error){
@@ -150,17 +163,13 @@ return
 }
 
 user=data.user
-
 start()
 
 }
 
 async function logout(){
-
 await client.auth.signOut()
-
 location.reload()
-
 }
 
 async function start(){
@@ -168,19 +177,31 @@ async function start(){
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 
-loadActions()
 loadAvatar()
+loadActions()
 
 }
 
-async function addAction(points){
+async function addAction(name,points){
 
 await client
 .from("actions")
 .insert({
 user_id:user.id,
+name:name,
 points:points
 })
+
+loadActions()
+
+}
+
+async function deleteAction(id){
+
+await client
+.from("actions")
+.delete()
+.eq("id",id)
 
 loadActions()
 
@@ -197,7 +218,6 @@ const {data}=await client
 let total=0
 
 const feed=document.getElementById("feed")
-
 feed.innerHTML=""
 
 data.forEach(a=>{
@@ -205,12 +225,12 @@ data.forEach(a=>{
 total+=a.points
 
 const div=document.createElement("div")
-
 div.className="item"
 
 div.innerHTML=`
-<span>${a.points>0?"+":""}${a.points}</span>
-<span>${new Date(a.created_at).toLocaleDateString()}</span>
+<div class="name">${a.name}</div>
+<div class="points">${a.points>0?"+":""}${a.points}</div>
+<button class="delete" onclick="deleteAction('${a.id}')">X</button>
 `
 
 feed.appendChild(div)
@@ -224,16 +244,15 @@ document.getElementById("capital").innerText=total
 async function uploadAvatar(){
 
 const file=document.getElementById("file").files[0]
-
 if(!file)return
 
-const filePath=user.id+".png"
+const path=user.id+".png"
 
 await client.storage
 .from("avatars")
-.upload(filePath,file,{upsert:true})
+.upload(path,file,{upsert:true})
 
-const url= supabaseUrl + "/storage/v1/object/public/avatars/" + filePath
+const url=supabaseUrl+"/storage/v1/object/public/avatars/"+path+"?t="+Date.now()
 
 await client
 .from("profiles")
@@ -242,7 +261,7 @@ id:user.id,
 avatar_url:url
 })
 
-loadAvatar()
+document.getElementById("avatar").src=url
 
 }
 
@@ -250,7 +269,7 @@ async function loadAvatar(){
 
 const {data}=await client
 .from("profiles")
-.select("*")
+.select("avatar_url")
 .eq("id",user.id)
 .single()
 
@@ -267,7 +286,6 @@ client.auth.getSession().then(({data})=>{
 if(data.session){
 
 user=data.session.user
-
 start()
 
 }

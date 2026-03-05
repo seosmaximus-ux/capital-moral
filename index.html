@@ -2,6 +2,7 @@
 <html>
 
 <head>
+
 <meta charset="UTF-8">
 <title>Capital Moral</title>
 
@@ -10,72 +11,127 @@
 <style>
 
 body{
-background:black;
+background:#0a0a0a;
 color:white;
-font-family:Arial;
-text-align:center;
-padding:40px;
+font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+margin:0;
+}
+
+.container{
+max-width:500px;
+margin:auto;
+padding:30px;
+}
+
+h1{
+font-weight:600;
+letter-spacing:1px;
+}
+
+.card{
+background:#141414;
+padding:25px;
+border-radius:14px;
+margin-top:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
 
 input{
-padding:10px;
-margin:5px;
+width:100%;
+padding:12px;
+margin-top:10px;
 border:none;
-border-radius:6px;
+border-radius:8px;
+background:#1f1f1f;
+color:white;
 }
 
 button{
-padding:10px 14px;
-margin:5px;
+margin-top:10px;
+padding:12px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 background:white;
 color:black;
+font-weight:600;
 cursor:pointer;
+width:100%;
 }
 
 button:hover{
-opacity:0.85;
+opacity:0.9;
 }
 
-#avatar{
-width:100px;
-height:100px;
+.avatar{
+width:110px;
+height:110px;
 border-radius:50%;
-object-fit:cover;
-display:block;
+overflow:hidden;
 margin:auto;
+margin-bottom:15px;
 background:#222;
 }
 
-#feed{
-max-width:420px;
-margin:auto;
-margin-top:30px;
-text-align:left;
+.avatar img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.points{
+font-size:40px;
+font-weight:700;
+margin-bottom:20px;
+}
+
+.actions button{
+width:48%;
+margin:1%;
+}
+
+.feed{
+margin-top:20px;
 }
 
 .item{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:10px;
-border-bottom:1px solid #333;
+padding:12px;
+border-bottom:1px solid #222;
 }
 
 .name{
 flex:1;
 }
 
-.points{
+.value{
 width:60px;
 text-align:center;
+font-weight:600;
 }
 
 .delete{
 background:#ff4444;
 color:white;
-padding:5px 8px;
+padding:6px 10px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.logout{
+background:#333;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
 }
 
 </style>
@@ -84,14 +140,14 @@ padding:5px 8px;
 
 <body>
 
+<div class="container">
+
 <h1>Capital Moral</h1>
 
-<div id="loginBox">
+<div id="loginBox" class="card">
 
 <input id="email" placeholder="email">
 <input id="password" type="password" placeholder="password">
-
-<br>
 
 <button onclick="login()">Entrar</button>
 <button onclick="register()">Registrarse</button>
@@ -100,26 +156,36 @@ padding:5px 8px;
 
 <div id="app" style="display:none">
 
-<img id="avatar">
+<div class="card">
 
-<h2 id="capital">0</h2>
+<div class="topbar">
+<div id="userEmail"></div>
+<div class="logout" onclick="logout()">Salir</div>
+</div>
 
-<br>
+<div class="avatar">
+<img id="avatarImg">
+</div>
 
-<button onclick="addAction('Ayudar a alguien',10)">+ Ayudar</button>
-<button onclick="addAction('Mentir',-5)">- Mentir</button>
-<button onclick="addAction('Ser generoso',8)">+ Generosidad</button>
-
-<br><br>
+<div class="points" id="capital">0</div>
 
 <input type="file" id="file">
 <button onclick="uploadAvatar()">Subir avatar</button>
 
-<br><br>
+</div>
 
-<button onclick="logout()">Cerrar sesión</button>
+<div class="card actions">
 
-<div id="feed"></div>
+<button onclick="addAction('Ayudar a alguien',10)">+ Ayudar</button>
+<button onclick="addAction('Generosidad',8)">+ Generosidad</button>
+<button onclick="addAction('Mentir',-5)">- Mentir</button>
+<button onclick="addAction('Ser egoísta',-8)">- Egoísmo</button>
+
+</div>
+
+<div class="card feed" id="feed"></div>
+
+</div>
 
 </div>
 
@@ -137,10 +203,7 @@ async function register(){
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {error}=await client.auth.signUp({
-email,
-password
-})
+const {error}=await client.auth.signUp({email,password})
 
 if(error) alert(error.message)
 else alert("Usuario creado")
@@ -152,15 +215,9 @@ async function login(){
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {data,error}=await client.auth.signInWithPassword({
-email,
-password
-})
+const {data,error}=await client.auth.signInWithPassword({email,password})
 
-if(error){
-alert(error.message)
-return
-}
+if(error){alert(error.message);return}
 
 user=data.user
 start()
@@ -177,6 +234,8 @@ async function start(){
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 
+document.getElementById("userEmail").innerText=user.email
+
 loadAvatar()
 loadActions()
 
@@ -186,11 +245,7 @@ async function addAction(name,points){
 
 await client
 .from("actions")
-.insert({
-user_id:user.id,
-name:name,
-points:points
-})
+.insert({user_id:user.id,name,points})
 
 loadActions()
 
@@ -229,8 +284,8 @@ div.className="item"
 
 div.innerHTML=`
 <div class="name">${a.name}</div>
-<div class="points">${a.points>0?"+":""}${a.points}</div>
-<button class="delete" onclick="deleteAction('${a.id}')">X</button>
+<div class="value">${a.points>0?"+":""}${a.points}</div>
+<div class="delete" onclick="deleteAction('${a.id}')">X</div>
 `
 
 feed.appendChild(div)
@@ -246,22 +301,23 @@ async function uploadAvatar(){
 const file=document.getElementById("file").files[0]
 if(!file)return
 
-const path=user.id+".png"
+const path=user.id+".jpg"
 
 await client.storage
 .from("avatars")
 .upload(path,file,{upsert:true})
 
-const url=supabaseUrl+"/storage/v1/object/public/avatars/"+path+"?t="+Date.now()
+const {data}=client.storage
+.from("avatars")
+.getPublicUrl(path)
+
+const url=data.publicUrl+"?t="+Date.now()
 
 await client
 .from("profiles")
-.upsert({
-id:user.id,
-avatar_url:url
-})
+.upsert({id:user.id,avatar_url:url})
 
-document.getElementById("avatar").src=url
+document.getElementById("avatarImg").src=url
 
 }
 
@@ -275,7 +331,7 @@ const {data}=await client
 
 if(data && data.avatar_url){
 
-document.getElementById("avatar").src=data.avatar_url
+document.getElementById("avatarImg").src=data.avatar_url
 
 }
 
@@ -295,4 +351,5 @@ start()
 </script>
 
 </body>
+
 </html>

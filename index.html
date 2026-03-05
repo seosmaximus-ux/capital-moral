@@ -1,84 +1,102 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Cyborg Dashboard</title>
+<title>Capital Moral</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
 body{
-background:#0a0a0a;
+font-family:Arial,Helvetica,sans-serif;
+background:#0f0f10;
 color:white;
-font-family:Arial;
-display:flex;
-flex-direction:column;
-align-items:center;
 margin:0;
-}
-
-.container{
-width:380px;
-margin-top:40px;
-text-align:center;
-}
-
-.avatar{
-width:120px;
-height:120px;
-border-radius:50%;
-overflow:hidden;
-border:2px solid #333;
-margin:auto;
-}
-
-.avatar img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-input[type=file]{
-margin-top:10px;
-color:white;
-}
-
-.actions{
-margin-top:25px;
 display:flex;
-flex-wrap:wrap;
-gap:10px;
 justify-content:center;
 }
 
+.container{
+width:420px;
+max-width:95%;
+padding:20px;
+}
+
+h1{
+text-align:center;
+font-weight:300;
+letter-spacing:3px;
+margin-bottom:30px;
+}
+
+.card{
+background:#1a1a1d;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
 button{
-background:#111;
-border:1px solid #444;
-color:white;
-padding:10px 15px;
-border-radius:8px;
+background:white;
+color:black;
+border:none;
+padding:10px 16px;
+border-radius:6px;
 cursor:pointer;
-transition:0.2s;
+margin-top:10px;
 }
 
-button:hover{
-background:#222;
+button.secondary{
+background:#333;
+color:white;
 }
 
-.history{
-margin-top:30px;
-text-align:left;
+input{
 width:100%;
+padding:10px;
+border-radius:6px;
+border:none;
+margin-top:10px;
 }
 
-.history h3{
+.profile{
+text-align:center;
+}
+
+.profile img{
+width:90px;
+height:90px;
+border-radius:50%;
+object-fit:cover;
+display:block;
+margin:auto;
+}
+
+.points{
+font-size:28px;
+margin-top:10px;
+}
+
+.action{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px;
 border-bottom:1px solid #333;
-padding-bottom:5px;
 }
 
-.log{
+.history-item{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid #333;
 font-size:14px;
-margin:6px 0;
+}
+
+.small{
+font-size:12px;
 color:#aaa;
 }
 
@@ -89,26 +107,48 @@ color:#aaa;
 
 <div class="container">
 
-<div class="avatar">
-<img id="avatarImg">
+<h1>CAPITAL MORAL</h1>
+
+<div id="auth" class="card">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Contraseña">
+
+<button onclick="login()">Entrar</button>
+<button class="secondary" onclick="register()">Registrarse</button>
 </div>
 
-<input type="file" id="upload">
+<div id="app" style="display:none">
 
-<div class="actions">
+<div class="card profile">
 
-<button onclick="addAction('Entrenar')">Entrenar</button>
-<button onclick="addAction('Leer')">Leer</button>
-<button onclick="addAction('Meditar')">Meditar</button>
-<button onclick="addAction('Dormir')">Dormir</button>
+<img id="avatar" src="https://i.imgur.com/2yaf2wb.png">
+
+<input type="file" id="avatarUpload">
+
+<button onclick="uploadAvatar()">Cambiar foto</button>
+
+<div class="points" id="points">0</div>
+
+<button class="secondary" onclick="logout()">Cerrar sesión</button>
 
 </div>
 
-<div class="history">
+
+<div class="card">
+
+<h3>Acciones</h3>
+
+<div id="actions"></div>
+
+</div>
+
+<div class="card">
 
 <h3>Historial</h3>
 
-<div id="logs"></div>
+<div id="history"></div>
+
+</div>
 
 </div>
 
@@ -116,74 +156,179 @@ color:#aaa;
 
 <script>
 
-const avatar = document.getElementById("avatarImg")
-const upload = document.getElementById("upload")
-const logs = document.getElementById("logs")
+const supabase = window.supabase.createClient(
+"TU_SUPABASE_URL",
+"TU_SUPABASE_ANON_KEY"
+)
 
-// cargar avatar guardado
-const savedAvatar = localStorage.getItem("avatar")
+let user=null
 
-if(savedAvatar){
-avatar.src = savedAvatar
-}
+const actionsList=[
+{name:"Entrenar",points:10},
+{name:"Leer",points:6},
+{name:"Meditar",points:5},
+{name:"Estudiar",points:8},
+{name:"Dieta perfecta",points:10}
+]
 
-// subir avatar
-upload.addEventListener("change",function(){
+function renderActions(){
 
-const file = this.files[0]
+const container=document.getElementById("actions")
 
-const reader = new FileReader()
+container.innerHTML=""
 
-reader.onload = function(){
+actionsList.forEach(a=>{
 
-avatar.src = reader.result
-localStorage.setItem("avatar",reader.result)
+const div=document.createElement("div")
 
-}
+div.className="action"
 
-reader.readAsDataURL(file)
+div.innerHTML=`
+<span>${a.name} (+${a.points})</span>
+<button onclick="addAction('${a.name}',${a.points})">+</button>
+`
 
-})
-
-// cargar historial
-let history = JSON.parse(localStorage.getItem("history")) || []
-
-function renderHistory(){
-
-logs.innerHTML=""
-
-history.slice().reverse().forEach(item=>{
-
-const div = document.createElement("div")
-
-div.className="log"
-
-div.innerText=item
-
-logs.appendChild(div)
+container.appendChild(div)
 
 })
 
 }
 
-renderHistory()
+async function addAction(name,points){
 
-function addAction(action){
+await supabase.from("actions").insert({
+user_id:user.id,
+name:name,
+points:points
+})
 
-const time = new Date().toLocaleString()
-
-const entry = action+" — "+time
-
-history.push(entry)
-
-localStorage.setItem("history",JSON.stringify(history))
-
-renderHistory()
+loadHistory()
 
 }
+
+async function loadHistory(){
+
+const {data}=await supabase
+.from("actions")
+.select("*")
+.eq("user_id",user.id)
+.order("created_at",{ascending:false})
+
+let total=0
+
+const history=document.getElementById("history")
+
+history.innerHTML=""
+
+data.forEach(item=>{
+
+total+=item.points
+
+const div=document.createElement("div")
+
+div.className="history-item"
+
+div.innerHTML=`
+<span>${item.name}</span>
+<span>+${item.points}</span>
+`
+
+history.appendChild(div)
+
+})
+
+document.getElementById("points").innerText=total
+
+}
+
+async function login(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const {data,error}=await supabase.auth.signInWithPassword({
+email,password
+})
+
+if(error){alert(error.message);return}
+
+user=data.user
+
+startApp()
+
+}
+
+async function register(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const {error}=await supabase.auth.signUp({
+email,password
+})
+
+if(error){alert(error.message);return}
+
+alert("Usuario creado")
+
+}
+
+async function logout(){
+
+await supabase.auth.signOut()
+
+location.reload()
+
+}
+
+async function startApp(){
+
+document.getElementById("auth").style.display="none"
+document.getElementById("app").style.display="block"
+
+renderActions()
+
+loadHistory()
+
+loadAvatar()
+
+}
+
+async function uploadAvatar(){
+
+const file=document.getElementById("avatarUpload").files[0]
+
+const filePath=user.id+".png"
+
+await supabase.storage
+.from("avatars")
+.upload(filePath,file,{upsert:true})
+
+loadAvatar()
+
+}
+
+async function loadAvatar(){
+
+const {data}=supabase
+.storage
+.from("avatars")
+.getPublicUrl(user.id+".png")
+
+if(data.publicUrl){
+document.getElementById("avatar").src=data.publicUrl+"?t="+Date.now()
+}
+
+}
+
+supabase.auth.getSession().then(res=>{
+if(res.data.session){
+user=res.data.session.user
+startApp()
+}
+})
 
 </script>
 
 </body>
 </html>
-```

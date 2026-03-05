@@ -1,72 +1,79 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
 <meta charset="UTF-8">
-<title>Natural Fit</title>
+<title>Capital Moral</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
 body{
-font-family: 'Inter', sans-serif;
-background:#0f0f0f;
+font-family:system-ui;
+background:#0e0e0e;
 color:white;
-margin:0;
 display:flex;
 justify-content:center;
+padding:40px;
 }
 
 .container{
-width:380px;
-max-width:95%;
-padding:20px;
-}
-
-h1{
-text-align:center;
-font-weight:300;
-letter-spacing:2px;
-margin-bottom:30px;
+width:420px;
 }
 
 .card{
-background:#181818;
-padding:20px;
-border-radius:14px;
-margin-bottom:20px;
-box-shadow:0 8px 20px rgba(0,0,0,0.4);
+background:#1a1a1a;
+border-radius:20px;
+padding:28px;
+margin-bottom:24px;
+box-shadow:0 10px 40px rgba(0,0,0,.5);
 }
 
-.avatar-container{
-display:flex;
-justify-content:center;
-margin-bottom:15px;
+h2{
+margin-top:0;
+font-weight:600;
 }
 
 .avatar{
-width:110px;
-height:110px;
+width:120px;
+height:120px;
 border-radius:50%;
-object-fit:cover;
-border:3px solid #2a2a2a;
+background:#333;
+margin:auto;
+overflow:hidden;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-.username{
-text-align:center;
-font-size:18px;
-margin-bottom:10px;
-font-weight:500;
+.avatar img{
+width:100%;
+height:100%;
+object-fit:cover;
 }
 
 .points{
 text-align:center;
-font-size:28px;
-font-weight:600;
-margin-bottom:10px;
+font-size:40px;
+font-weight:700;
+margin-top:10px;
+}
+
+.progress{
+height:10px;
+background:#333;
+border-radius:20px;
+margin-top:10px;
+overflow:hidden;
+}
+
+.progress-bar{
+height:10px;
+background:linear-gradient(90deg,#00ffa6,#00c3ff);
+width:0%;
+transition:0.4s;
 }
 
 button{
@@ -74,15 +81,35 @@ width:100%;
 padding:12px;
 border:none;
 border-radius:10px;
-background:#ffffff;
-color:#000;
-font-weight:600;
+margin-top:10px;
+font-size:15px;
+background:#2a2a2a;
+color:white;
 cursor:pointer;
-transition:0.2s;
+transition:.2s;
 }
 
 button:hover{
-opacity:0.85;
+background:#3a3a3a;
+}
+
+.action{
+display:flex;
+justify-content:space-between;
+margin-top:8px;
+}
+
+.action button{
+width:auto;
+padding:6px 12px;
+font-size:13px;
+}
+
+.ranking-item{
+display:flex;
+justify-content:space-between;
+padding:6px 0;
+border-bottom:1px solid #2a2a2a;
 }
 
 input{
@@ -91,81 +118,64 @@ padding:10px;
 border-radius:8px;
 border:none;
 margin-bottom:10px;
-}
-
-.leaderboard-item{
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:10px 0;
-border-bottom:1px solid #2a2a2a;
-}
-
-.rank-left{
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.rank-avatar{
-width:36px;
-height:36px;
-border-radius:50%;
-object-fit:cover;
-}
-
-.rank-name{
-font-weight:500;
-}
-
-.rank-points{
-opacity:0.7;
-}
-
-.small{
-font-size:13px;
-opacity:0.6;
-text-align:center;
-margin-top:10px;
+background:#2a2a2a;
+color:white;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>NATURAL FIT</h1>
-
 <div class="card" id="loginCard">
 
-<input id="usernameInput" placeholder="Nombre de usuario">
-<button onclick="login()">Entrar</button>
+<h2>Entrar</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button> <button onclick="signup()">Crear cuenta</button>
 
 </div>
 
-<div class="card" id="profileCard" style="display:none">
+<div id="app" style="display:none">
 
-<div class="avatar-container">
-<img id="avatarImg" class="avatar">
+<div class="card">
+
+<div class="avatar">
+<img id="avatarImg">
 </div>
 
-<div class="username" id="username"></div>
+<input type="file" onchange="uploadAvatar(event)">
 
 <div class="points" id="points">0</div>
 
-<button onclick="addPoint()">+1 punto</button>
-
-<div class="small">Un punto por día</div>
+<div class="progress">
+<div class="progress-bar" id="bar"></div>
+</div>
 
 </div>
 
 <div class="card">
 
-<h3>Ranking</h3>
+<h2>Acciones</h2>
 
-<div id="leaderboard"></div>
+<button onclick="addPoints('Entrenamiento',10)">Entrené</button> <button onclick="addPoints('Meditación',5)">Medité</button> <button onclick="addPoints('Lectura',5)">Leí</button> <button onclick="addPoints('Ayudar',8)">Ayudé a alguien</button>
+
+<div id="actionsList"></div>
+
+</div>
+
+<div class="card">
+
+<h2>Ranking</h2>
+
+<div id="ranking"></div>
+
+</div>
 
 </div>
 
@@ -173,126 +183,222 @@ margin-top:10px;
 
 <script>
 
-const supabase = supabase.createClient(
-"https://mlxcjgywjhtodcjjeiuv.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
-)
+const SUPABASE_URL="https://mlxcjgywjhtodcjjeiuv.supabase.co"
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
 
-let currentUser = null
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+
+let userId=null
+
 
 async function login(){
 
-const username = document.getElementById("usernameInput").value
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
 
-if(!username) return
+const {data,error}=await client.auth.signInWithPassword({email,password})
 
-let { data } = await supabase
-.from("profiles")
-.select("*")
-.eq("username", username)
-.single()
-
-if(!data){
-
-let { data:newUser } = await supabase
-.from("profiles")
-.insert([{username:username,points:0}])
-.select()
-.single()
-
-currentUser=newUser
-
-}else{
-currentUser=data
+if(error){
+alert(error.message)
+return
 }
+
+init()
+
+}
+
+
+async function signup(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const {data,error}=await client.auth.signUp({email,password})
+
+if(error){
+alert(error.message)
+return
+}
+
+alert("Cuenta creada")
+
+}
+
+
+async function init(){
+
+const {data:{user}}=await client.auth.getUser()
+
+if(!user)return
+
+userId=user.id
 
 document.getElementById("loginCard").style.display="none"
-document.getElementById("profileCard").style.display="block"
+document.getElementById("app").style.display="block"
 
-loadProfile()
-loadLeaderboard()
-
-}
-
-function loadProfile(){
-
-document.getElementById("username").innerText=currentUser.username
-document.getElementById("points").innerText=currentUser.points
-
-const avatar=document.getElementById("avatarImg")
-
-if(currentUser.avatar_url){
-
-avatar.src=currentUser.avatar_url
-
-}else{
-
-avatar.src="https://i.imgur.com/6VBx3io.png"
+loadUser()
+loadRanking()
+loadActions()
 
 }
 
-}
 
-async function addPoint(){
+async function loadUser(){
 
-let newPoints=currentUser.points+1
-
-await supabase
-.from("profiles")
-.update({points:newPoints})
-.eq("id",currentUser.id)
-
-currentUser.points=newPoints
-
-document.getElementById("points").innerText=newPoints
-
-loadLeaderboard()
-
-}
-
-async function loadLeaderboard(){
-
-let { data } = await supabase
+const {data}=await client
 .from("profiles")
 .select("*")
-.order("points",{ascending:false})
-.limit(10)
+.eq("id",userId)
+.single()
 
-const board=document.getElementById("leaderboard")
+if(!data)return
 
-board.innerHTML=""
+document.getElementById("points").innerText=data.points||0
 
-data.forEach((user,i)=>{
+const percent=(data.points%100)
 
-let avatar=user.avatar_url || "https://i.imgur.com/6VBx3io.png"
+document.getElementById("bar").style.width=percent+"%"
 
-board.innerHTML+=`
+if(data.avatar_url){
 
-<div class="leaderboard-item">
+document.getElementById("avatarImg").src=data.avatar_url
 
-<div class="rank-left">
+}
 
-<div>#${i+1}</div>
+}
 
-<img src="${avatar}" class="rank-avatar">
 
-<div class="rank-name">${user.username}</div>
+async function uploadAvatar(event){
 
-</div>
+const file=event.target.files[0]
 
-<div class="rank-points">${user.points}</div>
+if(!file)return
 
-</div>
+const filename=userId+".jpg"
 
+await client.storage
+.from("avatars")
+.remove([filename])
+
+const {data,error}=await client.storage
+.from("avatars")
+.upload(filename,file,{upsert:true})
+
+if(error){
+alert(error.message)
+return
+}
+
+const url=`${SUPABASE_URL}/storage/v1/object/public/avatars/${filename}?t=${Date.now()}`
+
+await client
+.from("profiles")
+.update({avatar_url:url})
+.eq("id",userId)
+
+loadUser()
+
+}
+
+
+async function addPoints(name,value){
+
+await client
+.from("actions")
+.insert({
+user_id:userId,
+name:name,
+value:value
+})
+
+await client.rpc("increment_points",{uid:userId,amount:value})
+
+loadUser()
+loadRanking()
+loadActions()
+
+}
+
+
+async function deleteAction(id){
+
+await client
+.from("actions")
+.delete()
+.eq("id",id)
+
+loadActions()
+
+}
+
+
+async function loadActions(){
+
+const {data}=await client
+.from("actions")
+.select("*")
+.eq("user_id",userId)
+.order("created_at",{ascending:false})
+
+const list=document.getElementById("actionsList")
+
+list.innerHTML=""
+
+if(!data)return
+
+data.forEach(a=>{
+
+const div=document.createElement("div")
+div.className="action"
+
+div.innerHTML=`
+<span>${a.name} (+${a.value})</span>
+<button onclick="deleteAction('${a.id}')">X</button>
 `
+
+list.appendChild(div)
 
 })
 
 }
 
-loadLeaderboard()
+
+async function loadRanking(){
+
+const {data}=await client
+.from("profiles")
+.select("username,points")
+.order("points",{ascending:false})
+.limit(10)
+
+const ranking=document.getElementById("ranking")
+
+ranking.innerHTML=""
+
+if(!data)return
+
+data.forEach((p,i)=>{
+
+const div=document.createElement("div")
+
+div.className="ranking-item"
+
+div.innerHTML=`
+<span>${i+1}. ${p.username||"Jugador"}</span>
+<span>${p.points||0}</span>
+`
+
+ranking.appendChild(div)
+
+})
+
+}
+
+
+init()
 
 </script>
 
 </body>
+
 </html>

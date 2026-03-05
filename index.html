@@ -11,29 +11,31 @@
 <style>
 
 body{
-background:#0a0a0a;
+background:#0b0b0b;
 color:white;
-font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
 margin:0;
 }
 
 .container{
-max-width:500px;
+max-width:520px;
 margin:auto;
-padding:30px;
+padding:30px 20px;
 }
 
 h1{
+font-size:28px;
 font-weight:600;
 letter-spacing:1px;
+margin-bottom:30px;
 }
 
 .card{
-background:#141414;
-padding:25px;
-border-radius:14px;
-margin-top:20px;
-box-shadow:0 0 20px rgba(0,0,0,0.4);
+background:#151515;
+border-radius:16px;
+padding:24px;
+margin-bottom:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.6);
 }
 
 input{
@@ -44,61 +46,92 @@ border:none;
 border-radius:8px;
 background:#1f1f1f;
 color:white;
+font-size:14px;
 }
 
 button{
-margin-top:10px;
+width:100%;
 padding:12px;
+margin-top:10px;
 border:none;
 border-radius:8px;
 background:white;
 color:black;
 font-weight:600;
 cursor:pointer;
-width:100%;
 }
 
 button:hover{
 opacity:0.9;
 }
 
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+font-size:14px;
+opacity:0.8;
+}
+
+.logout{
+background:#2b2b2b;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
 .avatar{
-width:110px;
-height:110px;
+width:120px;
+height:120px;
 border-radius:50%;
 overflow:hidden;
 margin:auto;
-margin-bottom:15px;
 background:#222;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .avatar img{
 width:100%;
 height:100%;
 object-fit:cover;
+display:block;
 }
 
 .points{
-font-size:40px;
+font-size:46px;
 font-weight:700;
-margin-bottom:20px;
+text-align:center;
+margin:15px 0;
+}
+
+.label{
+text-align:center;
+font-size:13px;
+opacity:0.6;
+}
+
+.actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
 }
 
 .actions button{
-width:48%;
-margin:1%;
+background:#222;
+color:white;
+font-weight:500;
 }
 
-.feed{
-margin-top:20px;
-}
-
-.item{
+.feed .item{
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:12px;
+padding:12px 0;
 border-bottom:1px solid #222;
+font-size:14px;
 }
 
 .name{
@@ -111,27 +144,20 @@ text-align:center;
 font-weight:600;
 }
 
+.pos{
+color:#3cff8a;
+}
+
+.neg{
+color:#ff5b5b;
+}
+
 .delete{
-background:#ff4444;
-color:white;
-padding:6px 10px;
+background:#333;
+padding:5px 8px;
 border-radius:6px;
 cursor:pointer;
-}
-
-.topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:15px;
-}
-
-.logout{
-background:#333;
-color:white;
-padding:8px 12px;
-border-radius:8px;
-cursor:pointer;
+font-size:12px;
 }
 
 </style>
@@ -164,22 +190,27 @@ cursor:pointer;
 </div>
 
 <div class="avatar">
-<img id="avatarImg">
+<img id="avatarImg" src="">
 </div>
 
 <div class="points" id="capital">0</div>
+<div class="label">Capital Moral</div>
 
 <input type="file" id="file">
-<button onclick="uploadAvatar()">Subir avatar</button>
+<button onclick="uploadAvatar()">Actualizar avatar</button>
 
 </div>
 
-<div class="card actions">
+<div class="card">
 
-<button onclick="addAction('Ayudar a alguien',10)">+ Ayudar</button>
-<button onclick="addAction('Generosidad',8)">+ Generosidad</button>
-<button onclick="addAction('Mentir',-5)">- Mentir</button>
-<button onclick="addAction('Ser egoísta',-8)">- Egoísmo</button>
+<div class="actions">
+
+<button onclick="addAction('Ayudé a alguien',10)">🤝 Ayudar</button>
+<button onclick="addAction('Acto generoso',8)">💝 Generosidad</button>
+<button onclick="addAction('Mentí',-5)">⚠️ Mentir</button>
+<button onclick="addAction('Acto egoísta',-8)">🧊 Egoísmo</button>
+
+</div>
 
 </div>
 
@@ -225,8 +256,10 @@ start()
 }
 
 async function logout(){
+
 await client.auth.signOut()
 location.reload()
+
 }
 
 async function start(){
@@ -284,7 +317,7 @@ div.className="item"
 
 div.innerHTML=`
 <div class="name">${a.name}</div>
-<div class="value">${a.points>0?"+":""}${a.points}</div>
+<div class="value ${a.points>0?'pos':'neg'}">${a.points>0?'+':''}${a.points}</div>
 <div class="delete" onclick="deleteAction('${a.id}')">X</div>
 `
 

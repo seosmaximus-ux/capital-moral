@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta charset="UTF-8">
@@ -11,9 +10,9 @@
 <style>
 
 body{
-background:#0b0b0b;
+background:#0a0a0a;
 color:white;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+font-family:system-ui;
 margin:0;
 }
 
@@ -24,18 +23,17 @@ padding:30px 20px;
 }
 
 h1{
-font-size:28px;
-font-weight:600;
+font-size:30px;
 letter-spacing:1px;
-margin-bottom:25px;
+margin-bottom:20px;
 }
 
 .card{
 background:#151515;
-border-radius:18px;
+border-radius:16px;
 padding:22px;
 margin-bottom:18px;
-box-shadow:0 15px 35px rgba(0,0,0,0.6);
+box-shadow:0 20px 40px rgba(0,0,0,0.6);
 }
 
 input{
@@ -46,7 +44,6 @@ border:none;
 border-radius:8px;
 background:#1f1f1f;
 color:white;
-font-size:14px;
 }
 
 button{
@@ -61,33 +58,30 @@ font-weight:600;
 cursor:pointer;
 }
 
-button:hover{
-opacity:0.9;
-}
-
 .topbar{
 display:flex;
 justify-content:space-between;
-align-items:center;
 margin-bottom:15px;
 font-size:14px;
-opacity:0.85;
 }
 
 .logout{
 background:#262626;
-padding:8px 14px;
-border-radius:8px;
+padding:6px 12px;
+border-radius:6px;
 cursor:pointer;
 }
 
 .avatar{
-width:110px;
-height:110px;
+width:120px;
+height:120px;
 border-radius:50%;
 overflow:hidden;
 margin:auto;
 background:#222;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .avatar img{
@@ -97,32 +91,16 @@ object-fit:cover;
 }
 
 .points{
-font-size:48px;
-font-weight:700;
+font-size:46px;
 text-align:center;
 margin:10px 0;
+font-weight:700;
 }
 
 .level{
 text-align:center;
-font-size:14px;
 opacity:0.7;
-}
-
-.progress{
-width:100%;
-height:8px;
-background:#222;
-border-radius:10px;
-overflow:hidden;
-margin-top:10px;
-}
-
-.bar{
-height:100%;
-width:0%;
-background:#37ff9c;
-transition:width .4s;
+font-size:14px;
 }
 
 .actions{
@@ -139,68 +117,33 @@ color:white;
 .feed .item{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:12px 0;
-border-bottom:1px solid #222;
-font-size:14px;
-}
-
-.value{
-width:70px;
-text-align:center;
-font-weight:600;
-}
-
-.pos{color:#37ff9c;}
-.neg{color:#ff6262;}
-
-.delete{
-background:#333;
-padding:4px 8px;
-border-radius:6px;
-cursor:pointer;
-font-size:12px;
-}
-
-.rankItem{
-display:flex;
-justify-content:space-between;
 padding:10px 0;
 border-bottom:1px solid #222;
 font-size:14px;
 }
 
-.rankUser{
+.value{
+width:60px;
+text-align:center;
+font-weight:600;
+}
+
+.pos{color:#35ff9a;}
+.neg{color:#ff6262;}
+
+.delete{
+cursor:pointer;
+opacity:0.6;
+}
+
+.rank{
 display:flex;
-align-items:center;
-gap:8px;
-}
-
-.rankAvatar{
-width:28px;
-height:28px;
-border-radius:50%;
-overflow:hidden;
-background:#222;
-}
-
-.rankAvatar img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-.badge{
-background:#222;
-padding:6px 10px;
-border-radius:20px;
-font-size:12px;
-display:inline-block;
-margin:4px;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid #222;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -230,19 +173,14 @@ margin:4px;
 </div>
 
 <div class="avatar">
-<img id="avatarImg">
+<img id="avatarImg" src="">
 </div>
 
 <div class="points" id="capital">0</div>
-
-<div class="level" id="levelName"></div>
-
-<div class="progress">
-<div class="bar" id="progressBar"></div>
-</div>
+<div class="level" id="level"></div>
 
 <input type="file" id="file">
-<button onclick="uploadAvatar()">Actualizar avatar</button>
+<button onclick="uploadAvatar()">Subir foto</button>
 
 </div>
 
@@ -250,10 +188,10 @@ margin:4px;
 
 <div class="actions">
 
-<button onclick="addAction('Ayudé a alguien',10)">🤝 Ayudar</button>
-<button onclick="addAction('Acto generoso',8)">💝 Generosidad</button>
-<button onclick="addAction('Mentí',-5)">⚠️ Mentir</button>
-<button onclick="addAction('Acto egoísta',-8)">🧊 Egoísmo</button>
+<button onclick="addAction('Ayudé a alguien',10)">🤝 Ayudar +10</button>
+<button onclick="addAction('Generosidad',8)">💝 Generoso +8</button>
+<button onclick="addAction('Mentí',-5)">⚠️ Mentir -5</button>
+<button onclick="addAction('Egoísmo',-8)">🧊 Egoísmo -8</button>
 
 </div>
 
@@ -261,16 +199,11 @@ margin:4px;
 
 <div class="card">
 <h3>Historial</h3>
-<div id="feed" class="feed"></div>
+<div id="feed"></div>
 </div>
 
 <div class="card">
-<h3>Logros</h3>
-<div id="achievements"></div>
-</div>
-
-<div class="card">
-<h3>Ranking Global</h3>
+<h3>Ranking</h3>
 <div id="ranking"></div>
 </div>
 
@@ -286,14 +219,6 @@ const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 const client=supabase.createClient(supabaseUrl,supabaseKey)
 
 let user=null
-
-const levels=[
-{points:0,name:"Iniciado"},
-{points:100,name:"Honorable"},
-{points:300,name:"Virtuoso"},
-{points:700,name:"Sabio"},
-{points:1500,name:"Maestro Moral"}
-]
 
 async function register(){
 
@@ -342,7 +267,6 @@ loadProfile()
 loadAvatar()
 loadActions()
 loadRanking()
-loadAchievements()
 
 }
 
@@ -350,11 +274,50 @@ async function loadProfile(){
 
 const {data}=await client
 .from("profiles")
-.select("username")
+.select("*")
 .eq("id",user.id)
 .single()
 
 document.getElementById("userName").innerText=data.username
+
+}
+
+async function uploadAvatar(){
+
+const file=document.getElementById("file").files[0]
+if(!file) return
+
+const path=user.id+".jpg"
+
+await client.storage
+.from("avatars")
+.upload(path,file,{upsert:true})
+
+const {data}=client.storage
+.from("avatars")
+.getPublicUrl(path)
+
+const url=data.publicUrl+"?t="+Date.now()
+
+await client.from("profiles")
+.update({avatar_url:url})
+.eq("id",user.id)
+
+document.getElementById("avatarImg").src=url
+
+}
+
+async function loadAvatar(){
+
+const {data}=await client
+.from("profiles")
+.select("avatar_url")
+.eq("id",user.id)
+.single()
+
+if(data && data.avatar_url){
+document.getElementById("avatarImg").src=data.avatar_url
+}
 
 }
 
@@ -379,29 +342,6 @@ loadActions()
 
 }
 
-function calculateLevel(total){
-
-let level=levels[0]
-
-for(let i=0;i<levels.length;i++){
-if(total>=levels[i].points) level=levels[i]
-}
-
-let next=levels.find(l=>l.points>level.points)
-
-let progress=0
-
-if(next){
-progress=((total-level.points)/(next.points-level.points))*100
-}else{
-progress=100
-}
-
-document.getElementById("levelName").innerText=level.name
-document.getElementById("progressBar").style.width=progress+"%"
-
-}
-
 async function loadActions(){
 
 const {data}=await client
@@ -419,24 +359,17 @@ data.forEach(a=>{
 
 total+=a.points
 
-const div=document.createElement("div")
-div.className="item"
-
-div.innerHTML=`
+feed.innerHTML+=`
+<div class="item">
 <div>${a.name}</div>
-<div class="value ${a.points>0?'pos':'neg'}">${a.points>0?'+':''}${a.points}</div>
-<div class="delete" onclick="deleteAction('${a.id}')">X</div>
+<div class="value ${a.points>0?'pos':'neg'}">${a.points}</div>
+<div class="delete" onclick="deleteAction('${a.id}')">❌</div>
+</div>
 `
-
-feed.appendChild(div)
 
 })
 
 document.getElementById("capital").innerText=total
-
-calculateLevel(total)
-
-checkAchievements(total)
 
 }
 
@@ -448,7 +381,7 @@ const {data:actions}=await client
 
 const {data:profiles}=await client
 .from("profiles")
-.select("id,username,avatar_url")
+.select("id,username")
 
 let totals={}
 
@@ -461,127 +394,25 @@ let ranking=[]
 profiles.forEach(p=>{
 ranking.push({
 user:p.username,
-avatar:p.avatar_url,
 points:totals[p.id]||0
 })
 })
 
 ranking.sort((a,b)=>b.points-a.points)
 
-ranking=ranking.slice(0,10)
-
 const box=document.getElementById("ranking")
 box.innerHTML=""
 
-ranking.forEach((r,i)=>{
+ranking.slice(0,10).forEach((r,i)=>{
 
 box.innerHTML+=`
-
-<div class="rankItem">
-
-<div class="rankUser">
-
-<div class="rankAvatar">
-<img src="${r.avatar || ''}">
-</div>
-
+<div class="rank">
 <div>#${i+1} ${r.user}</div>
-
-</div>
-
 <div>${r.points}</div>
-
 </div>
-
 `
 
 })
-
-}
-
-async function checkAchievements(points){
-
-if(points>=100) unlock("Primer Nivel")
-if(points>=300) unlock("Virtuoso")
-if(points>=700) unlock("Sabio")
-if(points>=1500) unlock("Maestro Moral")
-
-}
-
-async function unlock(name){
-
-const {data}=await client
-.from("achievements")
-.select("*")
-.eq("user_id",user.id)
-.eq("name",name)
-
-if(data.length===0){
-
-await client
-.from("achievements")
-.insert({user_id:user.id,name})
-
-loadAchievements()
-
-}
-
-}
-
-async function loadAchievements(){
-
-const {data}=await client
-.from("achievements")
-.select("*")
-.eq("user_id",user.id)
-
-const box=document.getElementById("achievements")
-
-box.innerHTML=""
-
-data.forEach(a=>{
-box.innerHTML+=`<div class="badge">${a.name}</div>`
-})
-
-}
-
-async function uploadAvatar(){
-
-const file=document.getElementById("file").files[0]
-if(!file)return
-
-const path=user.id+".jpg"
-
-await client.storage
-.from("avatars")
-.upload(path,file,{upsert:true})
-
-const {data}=client.storage
-.from("avatars")
-.getPublicUrl(path)
-
-const url=data.publicUrl+"?t="+Date.now()
-
-await client
-.from("profiles")
-.update({avatar_url:url})
-.eq("id",user.id)
-
-document.getElementById("avatarImg").src=url
-
-}
-
-async function loadAvatar(){
-
-const {data}=await client
-.from("profiles")
-.select("avatar_url")
-.eq("id",user.id)
-.single()
-
-if(data && data.avatar_url){
-document.getElementById("avatarImg").src=data.avatar_url
-}
 
 }
 

@@ -1,312 +1,296 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+
 <meta charset="UTF-8">
-<title>Cyborg 2.0</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Capital Moral</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+
 body{
-margin:0;
-font-family:Arial, sans-serif;
-background:#0d0d0d;
+background:#0c0c0c;
 color:white;
+font-family:Arial;
+margin:0;
 }
 
 .container{
-padding:20px;
-max-width:500px;
+max-width:900px;
 margin:auto;
+padding:30px;
+}
+
+.card{
+background:#171717;
+border-radius:14px;
+padding:20px;
+margin-bottom:20px;
 }
 
 button{
-background:#1f1f1f;
+background:#00ff88;
 border:none;
-color:white;
-padding:10px;
+padding:10px 16px;
 border-radius:8px;
 cursor:pointer;
+font-weight:bold;
 }
 
-button:hover{background:#2a2a2a;}
-
 input{
-background:#1a1a1a;
-border:none;
+padding:10px;
+border-radius:8px;
+border:1px solid #333;
+background:#000;
 color:white;
-padding:8px;
-border-radius:6px;
 }
 
 .nav{
 position:fixed;
 bottom:0;
 width:100%;
+background:#000;
 display:flex;
-background:#111;
+justify-content:space-around;
+padding:15px;
 border-top:1px solid #222;
 }
 
 .nav button{
-flex:1;
-border-radius:0;
 background:none;
-padding:15px;
+color:#888;
+}
+
+.nav .active{
+color:#00ff88;
 }
 
 .avatar{
 width:90px;
 height:90px;
 border-radius:50%;
-background:#222;
-background-size:cover;
-background-position:center;
+object-fit:cover;
+border:2px solid #00ff88;
 }
 
-.actionRow{
-display:grid;
-grid-template-columns: 1fr 70px 30px;
-align-items:center;
-gap:10px;
-margin-bottom:10px;
+.hidden{
+display:none;
 }
 
-.pointsInput{
-width:60px;
-text-align:center;
+.action{
+border-bottom:1px solid #222;
+padding:10px 0;
+display:flex;
+justify-content:space-between;
 }
 
-.small{
-font-size:12px;
-opacity:0.6;
-margin-top:5px;
-}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<div id="content"></div>
+
+<h1>Capital Moral</h1>
+
+<div id="auth">
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Contraseña">
+
+<button onclick="login()">Entrar</button>
+<button onclick="register()">Registrarse</button>
+
 </div>
 
-<div class="nav">
-<button onclick="goHome()">Inicio</button>
-<button onclick="goToday()">Mi Día</button>
-<button onclick="goProfile()">Perfil</button>
+<div id="app" class="hidden">
+
+<div class="card">
+
+<img id="avatar" class="avatar">
+
+<h3 id="userEmail"></h3>
+
+<input type="file" id="avatarUpload">
+
+<button onclick="uploadAvatar()">Actualizar imagen</button>
+
+<button onclick="logout()">Cerrar sesión</button>
+
+</div>
+
+<div id="perfil" class="card"></div>
+
+<div id="feed" class="card hidden"></div>
+
+<div id="ranking" class="card hidden"></div>
+
+</div>
+
+</div>
+
+<div class="nav hidden" id="menu">
+
+<button onclick="openTab('perfil')" id="btnPerfil">Perfil</button>
+
+<button onclick="openTab('feed')" id="btnFeed">Feed</button>
+
+<button onclick="openTab('ranking')" id="btnRanking">Ranking</button>
+
 </div>
 
 <script>
 
-const supabaseUrl="https://mlxcjgywjhtodcjjeiuv.supabase.co";
-const supabaseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc";
-const client=supabase.createClient(supabaseUrl,supabaseKey);
+const supabaseClient = supabase.createClient(
+"https://mlxcjgywjhtodcjjeiuv.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+)
 
-let user=null;
-
-/* ---------- AUTH ---------- */
-
-async function init(){
-const {data}=await client.auth.getUser();
-if(data.user){
-user=data.user;
-goHome();
-}else{
-showAuth();
-}
-}
-
-function showAuth(){
-document.getElementById("content").innerHTML=`
-<h2>Login</h2>
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
-<button onclick="login()">Entrar</button>
-<p id="authMsg"></p>
-`;
-}
+let user
 
 async function login(){
-let email=document.getElementById("email").value;
-let password=document.getElementById("password").value;
 
-const {error}=await client.auth.signInWithPassword({email,password});
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
 
-if(error){
-document.getElementById("authMsg").innerText=error.message;
-}else{
-location.reload();
-}
-}
+const {data,error}=await supabaseClient.auth.signInWithPassword({
+email,password
+})
 
-/* ---------- NAVEGACION ---------- */
+if(error) alert(error.message)
 
-function goHome(){
-loadFeed();
 }
 
-function goToday(){
-loadToday();
+async function register(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const {data,error}=await supabaseClient.auth.signUp({
+email,password
+})
+
+if(error) alert(error.message)
+
 }
 
-function goProfile(){
-loadProfile();
+async function logout(){
+
+await supabaseClient.auth.signOut()
+location.reload()
+
 }
 
-/* ---------- HOME ---------- */
+supabaseClient.auth.onAuthStateChange((event,session)=>{
 
-async function loadFeed(){
-const {data}=await client.from("actions")
-.select("*,profiles(username,avatar_url)")
-.order("created_at",{ascending:false})
-.limit(20);
+if(session){
 
-let html="<h2>Feed</h2>";
+user=session.user
+startApp()
 
-if(data){
-data.forEach(a=>{
-html+=`
-<div style="margin-bottom:15px;">
-<strong>${a.profiles?.username || "Usuario"}</strong>
-<br>${a.name} +${a.points}
-</div>
-`;
-});
 }
 
-document.getElementById("content").innerHTML=html;
+})
+
+async function startApp(){
+
+document.getElementById("auth").style.display="none"
+document.getElementById("app").classList.remove("hidden")
+document.getElementById("menu").classList.remove("hidden")
+
+document.getElementById("userEmail").innerText=user.email
+
+loadProfile()
+loadHistory()
+
+let tab=localStorage.getItem("tab")||"perfil"
+openTab(tab)
+
 }
 
-/* ---------- PROFILE ---------- */
+function openTab(tab){
+
+localStorage.setItem("tab",tab)
+
+document.getElementById("perfil").classList.add("hidden")
+document.getElementById("feed").classList.add("hidden")
+document.getElementById("ranking").classList.add("hidden")
+
+document.getElementById(tab).classList.remove("hidden")
+
+}
 
 async function loadProfile(){
 
-const {data}=await client.from("profiles")
+const {data}=await supabaseClient
+.from("usuarios")
 .select("*")
 .eq("id",user.id)
-.single();
+.single()
 
-let html=`
-<h2>Perfil</h2>
+if(data?.avatar_url){
 
-<div style="display:flex;gap:20px;align-items:center;margin-bottom:20px;">
-<div class="avatar" id="avatarPreview"
-style="background-image:url('${data.avatar_url || ""}')"></div>
+document.getElementById("avatar").src=data.avatar_url
 
-<div>
-<input type="file" id="avatarInput"><br><br>
-<button onclick="uploadAvatar()">Subir imagen</button>
-</div>
-</div>
+}
 
-<h3>${data.username || "Sin nombre"}</h3>
-
-<input id="usernameInput" placeholder="Nuevo nombre"><br><br>
-<button onclick="updateUsername()">Guardar nombre</button>
-
-<p id="profileMsg" class="small"></p>
-`;
-
-document.getElementById("content").innerHTML=html;
 }
 
 async function uploadAvatar(){
-let file=document.getElementById("avatarInput").files[0];
-if(!file) return;
 
-let path=user.id+".png";
+const file=document.getElementById("avatarUpload").files[0]
 
-await client.storage.from("avatars")
-.upload(path,file,{upsert:true});
+if(!file)return
 
-let {data}=client.storage.from("avatars")
-.getPublicUrl(path);
+const path=user.id+".jpg"
 
-await client.from("profiles")
+await supabaseClient.storage
+.from("avatars")
+.upload(path,file,{upsert:true})
+
+const {data}=supabaseClient
+.storage
+.from("avatars")
+.getPublicUrl(path)
+
+await supabaseClient
+.from("usuarios")
 .update({avatar_url:data.publicUrl})
-.eq("id",user.id);
+.eq("id",user.id)
 
-document.getElementById("avatarPreview")
-.style.backgroundImage=`url('${data.publicUrl}?t=${new Date().getTime()}')`;
+document.getElementById("avatar").src=data.publicUrl
 
-document.getElementById("profileMsg").innerText="Imagen actualizada correctamente";
+alert("Imagen actualizada correctamente")
+
 }
 
-async function updateUsername(){
-let value=document.getElementById("usernameInput").value;
-if(!value) return;
+async function loadHistory(){
 
-await client.from("profiles")
-.update({username:value})
-.eq("id",user.id);
-
-document.getElementById("profileMsg").innerText="Nombre actualizado";
-document.getElementById("usernameInput").value="";
-loadProfile();
-}
-
-/* ---------- MI DIA ---------- */
-
-async function loadToday(){
-
-let today=new Date().toISOString().split("T")[0];
-
-const {data}=await client.from("actions")
+const {data}=await supabaseClient
+.from("acciones")
 .select("*")
-.eq("user_id",user.id)
-.gte("created_at",today)
-.order("created_at",{ascending:false});
+.eq("usuario_id",user.id)
+.order("created_at",{ascending:false})
 
-let html="<h2>Mi Día</h2>";
+let html="<h3>Historial</h3>"
+
+data?.forEach(a=>{
 
 html+=`
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-<button onclick="addAction('Ejercicio',20)">Ejercicio +20</button>
-<button onclick="addAction('Lectura',15)">Lectura +15</button>
-<button onclick="addAction('Disciplina',25)">Disciplina +25</button>
-<button onclick="addAction('Ayuda',30)">Ayuda +30</button>
+<div class="action">
+<span>${a.descripcion}</span>
+<span>+${a.puntos}</span>
 </div>
-`;
+`
 
-if(data){
-data.forEach(a=>{
-html+=`
-<div class="actionRow">
-<div>${a.name}</div>
-<input class="pointsInput" type="number" value="${a.points}"
-onchange="editAction('${a.id}',this.value)">
-<div style="cursor:pointer;" onclick="deleteAction('${a.id}')">✕</div>
-</div>
-`;
-});
+})
+
+document.getElementById("perfil").innerHTML=html
+
 }
-
-document.getElementById("content").innerHTML=html;
-}
-
-async function addAction(name,points){
-await client.from("actions")
-.insert({user_id:user.id,name,points});
-loadToday();
-}
-
-async function editAction(id,value){
-await client.from("actions")
-.update({points:parseInt(value)})
-.eq("id",id);
-}
-
-async function deleteAction(id){
-await client.from("actions")
-.delete()
-.eq("id",id);
-loadToday();
-}
-
-/* ---------- INIT ---------- */
-
-init();
 
 </script>
 

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
 <title>Capital Moral</title>
 
@@ -10,37 +9,53 @@
 <style>
 
 body{
-background:black;
+background:#0f0f10;
 color:white;
-font-family:Arial;
+font-family:system-ui;
 margin:0;
+text-align:center;
 }
 
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:20px;
-border-bottom:1px solid #222;
+h1{
+font-weight:600;
+letter-spacing:2px;
+margin-top:30px;
 }
 
 .container{
-max-width:700px;
+max-width:420px;
 margin:auto;
 padding:20px;
 }
 
 .card{
-background:#0f0f0f;
-border-radius:12px;
+background:#18181b;
+border-radius:14px;
 padding:20px;
-margin-bottom:20px;
-border:1px solid #1f1f1f;
+margin-top:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
 }
 
-.points{
-font-size:42px;
-font-weight:bold;
+button{
+background:#26262b;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:10px;
+margin:6px;
+cursor:pointer;
+transition:0.2s;
+}
+
+button:hover{
+background:#333;
+}
+
+input{
+padding:10px;
+border-radius:8px;
+border:none;
+margin:5px;
 }
 
 .avatar{
@@ -49,51 +64,20 @@ height:90px;
 border-radius:50%;
 object-fit:cover;
 border:2px solid #333;
+margin-bottom:10px;
 }
 
-.actions{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-top:20px;
-}
-
-button{
-background:#1a1a1a;
-color:white;
-border:none;
-padding:12px;
-border-radius:8px;
-cursor:pointer;
-}
-
-button:hover{
-background:#333;
-}
-
-.history-item{
+.historyItem{
 display:flex;
 justify-content:space-between;
-padding:10px 0;
-border-bottom:1px solid #222;
+padding:8px;
+border-bottom:1px solid #2a2a2a;
 }
 
-.ranking-item{
+.rankItem{
 display:flex;
 justify-content:space-between;
-padding:8px 0;
-}
-
-.login{
-text-align:center;
-margin-top:120px;
-}
-
-input{
-padding:10px;
-border-radius:6px;
-border:none;
-margin:5px;
+padding:6px;
 }
 
 </style>
@@ -102,28 +86,19 @@ margin:5px;
 
 <body>
 
-<header>
-
-<h2>Capital Moral</h2>
-
-<div id="userArea" style="display:none">
-<span id="username"></span>
-<button id="logoutBtn">Salir</button>
-</div>
-
-</header>
+<h1>Capital Moral</h1>
 
 <div class="container">
 
-<div id="loginBox" class="login">
+<div id="loginBox" class="card">
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Contraseña">
+<input id="email" placeholder="email">
+<input id="password" type="password" placeholder="contraseña">
 
 <br>
 
-<button id="loginBtn">Entrar</button>
-<button id="registerBtn">Registrarse</button>
+<button onclick="register()">Registrarse</button>
+<button onclick="login()">Entrar</button>
 
 </div>
 
@@ -132,28 +107,28 @@ margin:5px;
 
 <div class="card">
 
-<img id="avatar" class="avatar">
+<h3 id="username"></h3>
 
-<br><br>
+<img id="avatar" class="avatar" src="">
+
+<br>
 
 <input type="file" id="avatarInput">
-<button id="uploadAvatarBtn">Actualizar avatar</button>
+<button onclick="uploadAvatar()">Actualizar avatar</button>
 
-<h2 class="points" id="points">0</h2>
+<h2 id="points">0</h2>
+
+<button onclick="logout()">Salir</button>
 
 </div>
 
 
 <div class="card">
 
-<div class="actions">
-
-<button data-name="Ayudé a alguien" data-value="10">🤝 Ayudar +10</button>
-<button data-name="Acto generoso" data-value="8">💝 Generosidad +8</button>
-<button data-name="Mentí" data-value="-5">⚠️ Mentir -5</button>
-<button data-name="Egoísmo" data-value="-8">🧊 Egoísmo -8</button>
-
-</div>
+<button onclick="addAction('Ayudé a alguien',10)">🤝 Ayudar +10</button>
+<button onclick="addAction('Acto generoso',8)">💝 Generosidad +8</button>
+<button onclick="addAction('Mentí',-5)">⚠️ Mentir -5</button>
+<button onclick="addAction('Egoísmo',-8)">🧊 Egoísmo -8</button>
 
 </div>
 
@@ -161,6 +136,7 @@ margin:5px;
 <div class="card">
 
 <h3>Historial</h3>
+
 <div id="history"></div>
 
 </div>
@@ -169,6 +145,7 @@ margin:5px;
 <div class="card">
 
 <h3>Ranking Global</h3>
+
 <div id="ranking"></div>
 
 </div>
@@ -177,32 +154,23 @@ margin:5px;
 
 </div>
 
+
 <script>
 
-const supabaseClient = window.supabase.createClient(
+const supabaseClient = supabase.createClient(
 "https://mlxcjgywjhtodcjjeiuv.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
 )
 
 let currentUser=null
 
-document.getElementById("loginBtn").addEventListener("click",login)
-document.getElementById("registerBtn").addEventListener("click",register)
-document.getElementById("logoutBtn").addEventListener("click",logout)
-document.getElementById("uploadAvatarBtn").addEventListener("click",uploadAvatar)
-
-document.querySelectorAll(".actions button").forEach(btn=>{
-btn.addEventListener("click",()=>{
-addAction(btn.dataset.name,parseInt(btn.dataset.value))
-})
-})
 
 async function register(){
 
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {error}=await supabaseClient.auth.signUp({
+const {data,error}=await supabaseClient.auth.signUp({
 email,
 password
 })
@@ -212,12 +180,13 @@ else alert("Usuario creado")
 
 }
 
+
 async function login(){
 
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {error}=await supabaseClient.auth.signInWithPassword({
+const {data,error}=await supabaseClient.auth.signInWithPassword({
 email,
 password
 })
@@ -226,12 +195,15 @@ if(error) alert(error.message)
 
 }
 
+
 async function logout(){
 
 await supabaseClient.auth.signOut()
 location.reload()
 
 }
+
+
 
 supabaseClient.auth.onAuthStateChange((event,session)=>{
 
@@ -244,21 +216,27 @@ startApp()
 
 })
 
+
 async function startApp(){
 
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
-document.getElementById("userArea").style.display="block"
 
 document.getElementById("username").innerText=currentUser.email
 
-await loadProfile()
-await loadHistory()
-await loadRanking()
+await ensureProfile()
+
+loadProfile()
+
+loadHistory()
+
+loadRanking()
 
 }
 
-async function loadProfile(){
+
+
+async function ensureProfile(){
 
 const {data}=await supabaseClient
 .from("profiles")
@@ -273,19 +251,113 @@ id:currentUser.id,
 points:0
 })
 
-document.getElementById("points").innerText=0
+}
 
-}else{
+}
 
-document.getElementById("points").innerText=data.points ?? 0
 
-if(data.avatar_url){
+
+async function loadProfile(){
+
+const {data}=await supabaseClient
+.from("profiles")
+.select("*")
+.eq("id",currentUser.id)
+.single()
+
+document.getElementById("points").innerText=data.points || 0
+
+if(data.avatar_url)
 document.getElementById("avatar").src=data.avatar_url
-}
 
 }
 
+
+
+async function recalculatePoints(){
+
+const {data}=await supabaseClient
+.from("actions")
+.select("value")
+.eq("user_id",currentUser.id)
+
+let total=0
+
+data.forEach(a=>total+=a.value)
+
+await supabaseClient
+.from("profiles")
+.update({points:total})
+.eq("id",currentUser.id)
+
+document.getElementById("points").innerText=total
+
 }
+
+
+
+async function addAction(name,value){
+
+await supabaseClient.from("actions").insert({
+user_id:currentUser.id,
+name,
+value
+})
+
+await recalculatePoints()
+
+loadHistory()
+
+loadRanking()
+
+}
+
+
+
+async function loadHistory(){
+
+const {data}=await supabaseClient
+.from("actions")
+.select("*")
+.eq("user_id",currentUser.id)
+.order("id",{ascending:false})
+
+let html=""
+
+data.forEach(a=>{
+
+html+=`
+<div class="historyItem">
+${a.name}
+<span>${a.value}</span>
+<button onclick="deleteAction(${a.id})">X</button>
+</div>
+`
+
+})
+
+document.getElementById("history").innerHTML=html
+
+}
+
+
+
+async function deleteAction(id){
+
+await supabaseClient
+.from("actions")
+.delete()
+.eq("id",id)
+
+await recalculatePoints()
+
+loadHistory()
+
+loadRanking()
+
+}
+
+
 
 async function uploadAvatar(){
 
@@ -293,13 +365,13 @@ const file=document.getElementById("avatarInput").files[0]
 
 if(!file) return
 
-const path=currentUser.id+".jpg"
+const fileName=currentUser.id+".jpg"
 
 await supabaseClient.storage
 .from("avatars")
-.upload(path,file,{upsert:true})
+.upload(fileName,file,{upsert:true})
 
-const url="https://mlxcjgywjhtodcjjeiuv.supabase.co/storage/v1/object/public/avatars/"+path+"?t="+Date.now()
+const url=`https://mlxcjgywjhtodcjjeiuv.supabase.co/storage/v1/object/public/avatars/${fileName}?t=${Date.now()}`
 
 await supabaseClient
 .from("profiles")
@@ -310,103 +382,30 @@ document.getElementById("avatar").src=url
 
 }
 
-async function addAction(name,value){
 
-const points=parseInt(document.getElementById("points").innerText)
-
-const newPoints=points+value
-
-await supabaseClient.from("actions").insert({
-user_id:currentUser.id,
-name,
-value
-})
-
-await supabaseClient
-.from("profiles")
-.update({points:newPoints})
-.eq("id",currentUser.id)
-
-document.getElementById("points").innerText=newPoints
-
-loadHistory()
-loadRanking()
-
-}
-
-async function loadHistory(){
-
-const {data}=await supabaseClient
-.from("actions")
-.select("*")
-.eq("user_id",currentUser.id)
-.order("created_at",{ascending:false})
-
-const history=document.getElementById("history")
-
-history.innerHTML=""
-
-data.forEach(a=>{
-
-const div=document.createElement("div")
-
-div.className="history-item"
-
-div.innerHTML=`
-<span>${a.name}</span>
-<span>${a.value}</span>
-<button onclick="deleteAction('${a.id}',${a.value})">X</button>
-`
-
-history.appendChild(div)
-
-})
-
-}
-
-async function deleteAction(id,value){
-
-const points=parseInt(document.getElementById("points").innerText)
-
-const newPoints=points-value
-
-await supabaseClient.from("actions").delete().eq("id",id)
-
-await supabaseClient
-.from("profiles")
-.update({points:newPoints})
-.eq("id",currentUser.id)
-
-document.getElementById("points").innerText=newPoints
-
-loadHistory()
-loadRanking()
-
-}
 
 async function loadRanking(){
 
 const {data}=await supabaseClient
 .from("profiles")
-.select("points")
+.select("*")
 .order("points",{ascending:false})
 .limit(10)
 
-const ranking=document.getElementById("ranking")
+let html=""
 
-ranking.innerHTML=""
+data.forEach((u,i)=>{
 
-data.forEach((p,i)=>{
-
-const div=document.createElement("div")
-
-div.className="ranking-item"
-
-div.innerHTML=`<span>#${i+1}</span><span>${p.points ?? 0}</span>`
-
-ranking.appendChild(div)
+html+=`
+<div class="rankItem">
+#${i+1}
+<span>${u.points}</span>
+</div>
+`
 
 })
+
+document.getElementById("ranking").innerHTML=html
 
 }
 

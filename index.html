@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-
-<html lang="es">
+<html>
 
 <head>
 <meta charset="UTF-8">
@@ -11,115 +10,95 @@
 <style>
 
 body{
-font-family:system-ui;
-background:#0e0e0e;
+background:black;
 color:white;
+font-family:Arial;
+margin:0;
+}
+
+header{
 display:flex;
-justify-content:center;
-padding:40px;
+justify-content:space-between;
+align-items:center;
+padding:20px;
+border-bottom:1px solid #222;
+}
+
+h1{
+margin:0;
+font-size:22px;
 }
 
 .container{
-width:420px;
+max-width:700px;
+margin:auto;
+padding:20px;
 }
 
 .card{
-background:#1a1a1a;
-border-radius:20px;
-padding:28px;
-margin-bottom:24px;
-box-shadow:0 10px 40px rgba(0,0,0,.5);
-}
-
-h2{
-margin-top:0;
-font-weight:600;
-}
-
-.avatar{
-width:120px;
-height:120px;
-border-radius:50%;
-background:#333;
-margin:auto;
-overflow:hidden;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.avatar img{
-width:100%;
-height:100%;
-object-fit:cover;
+background:#0f0f0f;
+border-radius:12px;
+padding:20px;
+margin-bottom:20px;
+border:1px solid #1f1f1f;
 }
 
 .points{
-text-align:center;
 font-size:40px;
-font-weight:700;
-margin-top:10px;
+font-weight:bold;
 }
 
-.progress{
-height:10px;
-background:#333;
-border-radius:20px;
-margin-top:10px;
-overflow:hidden;
+.avatar{
+width:90px;
+height:90px;
+border-radius:50%;
+object-fit:cover;
+border:2px solid #333;
 }
 
-.progress-bar{
-height:10px;
-background:linear-gradient(90deg,#00ffa6,#00c3ff);
-width:0%;
-transition:0.4s;
+.actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:20px;
 }
 
 button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-margin-top:10px;
-font-size:15px;
-background:#2a2a2a;
+background:#1a1a1a;
 color:white;
+border:none;
+padding:12px;
+border-radius:8px;
 cursor:pointer;
-transition:.2s;
 }
 
 button:hover{
-background:#3a3a3a;
+background:#333;
 }
 
-.action{
+.history-item{
 display:flex;
 justify-content:space-between;
-margin-top:8px;
-}
-
-.action button{
-width:auto;
-padding:6px 12px;
-font-size:13px;
+padding:10px 0;
+border-bottom:1px solid #222;
 }
 
 .ranking-item{
 display:flex;
 justify-content:space-between;
-padding:6px 0;
-border-bottom:1px solid #2a2a2a;
+padding:8px 0;
+}
+
+.login{
+text-align:center;
+margin-top:100px;
 }
 
 input{
-width:100%;
 padding:10px;
-border-radius:8px;
+border-radius:6px;
 border:none;
-margin-bottom:10px;
-background:#2a2a2a;
-color:white;
+margin:5px;
 }
 
 </style>
@@ -128,50 +107,78 @@ color:white;
 
 <body>
 
+<header>
+
+<h1>Capital Moral</h1>
+
+<div id="userArea" style="display:none;">
+<span id="username"></span>
+<button onclick="logout()">Salir</button>
+</div>
+
+</header>
+
+
 <div class="container">
 
-<div class="card" id="loginCard">
-
-<h2>Entrar</h2>
+<div id="loginBox" class="login">
 
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<input id="password" type="password" placeholder="Contraseña">
 
-<button onclick="login()">Login</button> <button onclick="signup()">Crear cuenta</button>
+<br>
+
+<button onclick="login()">Entrar</button>
+<button onclick="register()">Registrarse</button>
 
 </div>
 
-<div id="app" style="display:none">
+
+<div id="app" style="display:none;">
 
 <div class="card">
 
-<div class="avatar">
-<img id="avatarImg">
-</div>
+<img id="avatar" class="avatar" src="">
 
-<input type="file" onchange="uploadAvatar(event)">
+<br><br>
 
-<div class="points" id="points">0</div>
+<input type="file" id="avatarInput">
+<button onclick="uploadAvatar()">Actualizar avatar</button>
 
-<div class="progress">
-<div class="progress-bar" id="bar"></div>
-</div>
+<h2 class="points" id="points">0</h2>
 
 </div>
+
 
 <div class="card">
 
-<h2>Acciones</h2>
+<div class="actions">
 
-<button onclick="addPoints('Entrenamiento',10)">Entrené</button> <button onclick="addPoints('Meditación',5)">Medité</button> <button onclick="addPoints('Lectura',5)">Leí</button> <button onclick="addPoints('Ayudar',8)">Ayudé a alguien</button>
+<button onclick="addAction('Ayudé a alguien',10)">🤝 Ayudar +10</button>
 
-<div id="actionsList"></div>
+<button onclick="addAction('Acto generoso',8)">💝 Generosidad +8</button>
+
+<button onclick="addAction('Mentí',-5)">⚠️ Mentir -5</button>
+
+<button onclick="addAction('Egoísmo',-8)">🧊 Egoísmo -8</button>
 
 </div>
 
+</div>
+
+
 <div class="card">
 
-<h2>Ranking</h2>
+<h3>Historial</h3>
+
+<div id="history"></div>
+
+</div>
+
+
+<div class="card">
+
+<h3>Ranking Global</h3>
 
 <div id="ranking"></div>
 
@@ -181,14 +188,34 @@ color:white;
 
 </div>
 
+
+
 <script>
 
-const SUPABASE_URL="https://mlxcjgywjhtodcjjeiuv.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+const supabase = window.supabase.createClient(
+"https://mlxcjgywjhtodcjjeiuv.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
+)
 
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+let user=null
 
-let userId=null
+
+
+async function register(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+const {error}=await supabase.auth.signUp({
+email:email,
+password:password
+})
+
+if(error) alert(error.message)
+else alert("Usuario creado")
+
+}
+
 
 
 async function login(){
@@ -196,186 +223,206 @@ async function login(){
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {data,error}=await client.auth.signInWithPassword({email,password})
+const {error}=await supabase.auth.signInWithPassword({
+email:email,
+password:password
+})
 
-if(error){
-alert(error.message)
-return
-}
-
-init()
+if(error) alert(error.message)
 
 }
 
 
-async function signup(){
 
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+async function logout(){
 
-const {data,error}=await client.auth.signUp({email,password})
-
-if(error){
-alert(error.message)
-return
-}
-
-alert("Cuenta creada")
+await supabase.auth.signOut()
+location.reload()
 
 }
 
 
-async function init(){
 
-const {data:{user}}=await client.auth.getUser()
+supabase.auth.onAuthStateChange((event,session)=>{
 
-if(!user)return
+if(session){
 
-userId=user.id
+user=session.user
+startApp()
 
-document.getElementById("loginCard").style.display="none"
+}
+
+})
+
+
+
+async function startApp(){
+
+document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
+document.getElementById("userArea").style.display="block"
 
-loadUser()
-loadRanking()
-loadActions()
+document.getElementById("username").innerText=user.email
+
+await loadProfile()
+await loadHistory()
+await loadRanking()
 
 }
 
 
-async function loadUser(){
 
-const {data}=await client
+async function loadProfile(){
+
+const {data}=await supabase
 .from("profiles")
 .select("*")
-.eq("id",userId)
+.eq("id",user.id)
 .single()
 
-if(!data)return
+if(!data){
 
-document.getElementById("points").innerText=data.points||0
+await supabase.from("profiles").insert({
+id:user.id,
+points:0
+})
 
-const percent=(data.points%100)
+document.getElementById("points").innerText=0
 
-document.getElementById("bar").style.width=percent+"%"
+}else{
+
+const points=data.points ?? 0
+
+document.getElementById("points").innerText=points
 
 if(data.avatar_url){
 
-document.getElementById("avatarImg").src=data.avatar_url
+document.getElementById("avatar").src=data.avatar_url
 
 }
 
 }
 
+}
 
-async function uploadAvatar(event){
 
-const file=event.target.files[0]
 
-if(!file)return
+async function uploadAvatar(){
 
-const filename=userId+".jpg"
+const file=document.getElementById("avatarInput").files[0]
 
-await client.storage
+if(!file) return
+
+const filePath=user.id+".jpg"
+
+await supabase.storage
 .from("avatars")
-.remove([filename])
+.upload(filePath,file,{upsert:true})
 
-const {data,error}=await client.storage
-.from("avatars")
-.upload(filename,file,{upsert:true})
+const url="https://mlxcjgywjhtodcjjeiuv.supabase.co/storage/v1/object/public/avatars/"+filePath+"?t="+Date.now()
 
-if(error){
-alert(error.message)
-return
-}
-
-const url=`${SUPABASE_URL}/storage/v1/object/public/avatars/${filename}?t=${Date.now()}`
-
-await client
+await supabase
 .from("profiles")
 .update({avatar_url:url})
-.eq("id",userId)
+.eq("id",user.id)
 
-loadUser()
+document.getElementById("avatar").src=url
 
 }
 
 
-async function addPoints(name,value){
 
-await client
-.from("actions")
-.insert({
-user_id:userId,
+async function addAction(name,value){
+
+const points=parseInt(document.getElementById("points").innerText)
+
+const newPoints=points+value
+
+await supabase.from("actions").insert({
+user_id:user.id,
 name:name,
 value:value
 })
 
-await client.rpc("increment_points",{uid:userId,amount:value})
+await supabase
+.from("profiles")
+.update({points:newPoints})
+.eq("id",user.id)
 
-loadUser()
+document.getElementById("points").innerText=newPoints
+
+loadHistory()
 loadRanking()
-loadActions()
 
 }
 
 
-async function deleteAction(id){
 
-await client
-.from("actions")
-.delete()
-.eq("id",id)
+async function loadHistory(){
 
-loadActions()
-
-}
-
-
-async function loadActions(){
-
-const {data}=await client
+const {data}=await supabase
 .from("actions")
 .select("*")
-.eq("user_id",userId)
+.eq("user_id",user.id)
 .order("created_at",{ascending:false})
 
-const list=document.getElementById("actionsList")
+const history=document.getElementById("history")
 
-list.innerHTML=""
+history.innerHTML=""
 
-if(!data)return
-
-data.forEach(a=>{
+data.forEach(action=>{
 
 const div=document.createElement("div")
-div.className="action"
+
+div.className="history-item"
 
 div.innerHTML=`
-<span>${a.name} (+${a.value})</span>
-<button onclick="deleteAction('${a.id}')">X</button>
+<span>${action.name}</span>
+<span>${action.value}</span>
+<button onclick="deleteAction('${action.id}',${action.value})">X</button>
 `
 
-list.appendChild(div)
+history.appendChild(div)
 
 })
 
 }
 
 
+
+async function deleteAction(id,value){
+
+const points=parseInt(document.getElementById("points").innerText)
+
+const newPoints=points-value
+
+await supabase.from("actions").delete().eq("id",id)
+
+await supabase
+.from("profiles")
+.update({points:newPoints})
+.eq("id",user.id)
+
+document.getElementById("points").innerText=newPoints
+
+loadHistory()
+loadRanking()
+
+}
+
+
+
 async function loadRanking(){
 
-const {data}=await client
+const {data}=await supabase
 .from("profiles")
-.select("username,points")
+.select("id,points,avatar_url")
 .order("points",{ascending:false})
 .limit(10)
 
 const ranking=document.getElementById("ranking")
 
 ranking.innerHTML=""
-
-if(!data)return
 
 data.forEach((p,i)=>{
 
@@ -384,8 +431,8 @@ const div=document.createElement("div")
 div.className="ranking-item"
 
 div.innerHTML=`
-<span>${i+1}. ${p.username||"Jugador"}</span>
-<span>${p.points||0}</span>
+<span>#${i+1}</span>
+<span>${p.points ?? 0}</span>
 `
 
 ranking.appendChild(div)
@@ -395,10 +442,8 @@ ranking.appendChild(div)
 }
 
 
-init()
 
 </script>
 
 </body>
-
 </html>

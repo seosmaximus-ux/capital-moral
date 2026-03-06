@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+
 <meta charset="UTF-8">
 <title>Capital Moral</title>
 
@@ -24,11 +24,6 @@ padding:20px;
 border-bottom:1px solid #222;
 }
 
-h1{
-margin:0;
-font-size:22px;
-}
-
 .container{
 max-width:700px;
 margin:auto;
@@ -44,7 +39,7 @@ border:1px solid #1f1f1f;
 }
 
 .points{
-font-size:40px;
+font-size:42px;
 font-weight:bold;
 }
 
@@ -91,7 +86,7 @@ padding:8px 0;
 
 .login{
 text-align:center;
-margin-top:100px;
+margin-top:120px;
 }
 
 input{
@@ -109,15 +104,14 @@ margin:5px;
 
 <header>
 
-<h1>Capital Moral</h1>
+<h2>Capital Moral</h2>
 
-<div id="userArea" style="display:none;">
+<div id="userArea" style="display:none">
 <span id="username"></span>
-<button onclick="logout()">Salir</button>
+<button id="logoutBtn">Salir</button>
 </div>
 
 </header>
-
 
 <div class="container">
 
@@ -128,22 +122,22 @@ margin:5px;
 
 <br>
 
-<button onclick="login()">Entrar</button>
-<button onclick="register()">Registrarse</button>
+<button id="loginBtn">Entrar</button>
+<button id="registerBtn">Registrarse</button>
 
 </div>
 
 
-<div id="app" style="display:none;">
+<div id="app" style="display:none">
 
 <div class="card">
 
-<img id="avatar" class="avatar" src="">
+<img id="avatar" class="avatar">
 
 <br><br>
 
 <input type="file" id="avatarInput">
-<button onclick="uploadAvatar()">Actualizar avatar</button>
+<button id="uploadAvatarBtn">Actualizar avatar</button>
 
 <h2 class="points" id="points">0</h2>
 
@@ -154,13 +148,10 @@ margin:5px;
 
 <div class="actions">
 
-<button onclick="addAction('Ayudé a alguien',10)">🤝 Ayudar +10</button>
-
-<button onclick="addAction('Acto generoso',8)">💝 Generosidad +8</button>
-
-<button onclick="addAction('Mentí',-5)">⚠️ Mentir -5</button>
-
-<button onclick="addAction('Egoísmo',-8)">🧊 Egoísmo -8</button>
+<button data-name="Ayudé a alguien" data-value="10">🤝 Ayudar +10</button>
+<button data-name="Acto generoso" data-value="8">💝 Generosidad +8</button>
+<button data-name="Mentí" data-value="-5">⚠️ Mentir -5</button>
+<button data-name="Egoísmo" data-value="-8">🧊 Egoísmo -8</button>
 
 </div>
 
@@ -170,7 +161,6 @@ margin:5px;
 <div class="card">
 
 <h3>Historial</h3>
-
 <div id="history"></div>
 
 </div>
@@ -179,7 +169,6 @@ margin:5px;
 <div class="card">
 
 <h3>Ranking Global</h3>
-
 <div id="ranking"></div>
 
 </div>
@@ -188,27 +177,34 @@ margin:5px;
 
 </div>
 
-
-
 <script>
 
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
 "https://mlxcjgywjhtodcjjeiuv.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seGNqZ3l3amh0b2RjamplaXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1Mzk1ODcsImV4cCI6MjA4ODExNTU4N30.fo-7m6lnBSODZYEwVFx0s7lRjNGIxqYmqY5I1Caxkdc"
 )
 
-let user=null
+let currentUser=null
 
+document.getElementById("loginBtn").addEventListener("click",login)
+document.getElementById("registerBtn").addEventListener("click",register)
+document.getElementById("logoutBtn").addEventListener("click",logout)
+document.getElementById("uploadAvatarBtn").addEventListener("click",uploadAvatar)
 
+document.querySelectorAll(".actions button").forEach(btn=>{
+btn.addEventListener("click",()=>{
+addAction(btn.dataset.name,parseInt(btn.dataset.value))
+})
+})
 
 async function register(){
 
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {error}=await supabase.auth.signUp({
-email:email,
-password:password
+const {error}=await supabaseClient.auth.signUp({
+email,
+password
 })
 
 if(error) alert(error.message)
@@ -216,45 +212,37 @@ else alert("Usuario creado")
 
 }
 
-
-
 async function login(){
 
 const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
-const {error}=await supabase.auth.signInWithPassword({
-email:email,
-password:password
+const {error}=await supabaseClient.auth.signInWithPassword({
+email,
+password
 })
 
 if(error) alert(error.message)
 
 }
 
-
-
 async function logout(){
 
-await supabase.auth.signOut()
+await supabaseClient.auth.signOut()
 location.reload()
 
 }
 
-
-
-supabase.auth.onAuthStateChange((event,session)=>{
+supabaseClient.auth.onAuthStateChange((event,session)=>{
 
 if(session){
 
-user=session.user
+currentUser=session.user
 startApp()
 
 }
 
 })
-
-
 
 async function startApp(){
 
@@ -262,7 +250,7 @@ document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 document.getElementById("userArea").style.display="block"
 
-document.getElementById("username").innerText=user.email
+document.getElementById("username").innerText=currentUser.email
 
 await loadProfile()
 await loadHistory()
@@ -270,20 +258,18 @@ await loadRanking()
 
 }
 
-
-
 async function loadProfile(){
 
-const {data}=await supabase
+const {data}=await supabaseClient
 .from("profiles")
 .select("*")
-.eq("id",user.id)
+.eq("id",currentUser.id)
 .single()
 
 if(!data){
 
-await supabase.from("profiles").insert({
-id:user.id,
+await supabaseClient.from("profiles").insert({
+id:currentUser.id,
 points:0
 })
 
@@ -291,21 +277,15 @@ document.getElementById("points").innerText=0
 
 }else{
 
-const points=data.points ?? 0
-
-document.getElementById("points").innerText=points
+document.getElementById("points").innerText=data.points ?? 0
 
 if(data.avatar_url){
-
 document.getElementById("avatar").src=data.avatar_url
-
 }
 
 }
 
 }
-
-
 
 async function uploadAvatar(){
 
@@ -313,24 +293,22 @@ const file=document.getElementById("avatarInput").files[0]
 
 if(!file) return
 
-const filePath=user.id+".jpg"
+const path=currentUser.id+".jpg"
 
-await supabase.storage
+await supabaseClient.storage
 .from("avatars")
-.upload(filePath,file,{upsert:true})
+.upload(path,file,{upsert:true})
 
-const url="https://mlxcjgywjhtodcjjeiuv.supabase.co/storage/v1/object/public/avatars/"+filePath+"?t="+Date.now()
+const url="https://mlxcjgywjhtodcjjeiuv.supabase.co/storage/v1/object/public/avatars/"+path+"?t="+Date.now()
 
-await supabase
+await supabaseClient
 .from("profiles")
 .update({avatar_url:url})
-.eq("id",user.id)
+.eq("id",currentUser.id)
 
 document.getElementById("avatar").src=url
 
 }
-
-
 
 async function addAction(name,value){
 
@@ -338,16 +316,16 @@ const points=parseInt(document.getElementById("points").innerText)
 
 const newPoints=points+value
 
-await supabase.from("actions").insert({
-user_id:user.id,
-name:name,
-value:value
+await supabaseClient.from("actions").insert({
+user_id:currentUser.id,
+name,
+value
 })
 
-await supabase
+await supabaseClient
 .from("profiles")
 .update({points:newPoints})
-.eq("id",user.id)
+.eq("id",currentUser.id)
 
 document.getElementById("points").innerText=newPoints
 
@@ -356,30 +334,28 @@ loadRanking()
 
 }
 
-
-
 async function loadHistory(){
 
-const {data}=await supabase
+const {data}=await supabaseClient
 .from("actions")
 .select("*")
-.eq("user_id",user.id)
+.eq("user_id",currentUser.id)
 .order("created_at",{ascending:false})
 
 const history=document.getElementById("history")
 
 history.innerHTML=""
 
-data.forEach(action=>{
+data.forEach(a=>{
 
 const div=document.createElement("div")
 
 div.className="history-item"
 
 div.innerHTML=`
-<span>${action.name}</span>
-<span>${action.value}</span>
-<button onclick="deleteAction('${action.id}',${action.value})">X</button>
+<span>${a.name}</span>
+<span>${a.value}</span>
+<button onclick="deleteAction('${a.id}',${a.value})">X</button>
 `
 
 history.appendChild(div)
@@ -388,20 +364,18 @@ history.appendChild(div)
 
 }
 
-
-
 async function deleteAction(id,value){
 
 const points=parseInt(document.getElementById("points").innerText)
 
 const newPoints=points-value
 
-await supabase.from("actions").delete().eq("id",id)
+await supabaseClient.from("actions").delete().eq("id",id)
 
-await supabase
+await supabaseClient
 .from("profiles")
 .update({points:newPoints})
-.eq("id",user.id)
+.eq("id",currentUser.id)
 
 document.getElementById("points").innerText=newPoints
 
@@ -410,13 +384,11 @@ loadRanking()
 
 }
 
-
-
 async function loadRanking(){
 
-const {data}=await supabase
+const {data}=await supabaseClient
 .from("profiles")
-.select("id,points,avatar_url")
+.select("points")
 .order("points",{ascending:false})
 .limit(10)
 
@@ -430,18 +402,13 @@ const div=document.createElement("div")
 
 div.className="ranking-item"
 
-div.innerHTML=`
-<span>#${i+1}</span>
-<span>${p.points ?? 0}</span>
-`
+div.innerHTML=`<span>#${i+1}</span><span>${p.points ?? 0}</span>`
 
 ranking.appendChild(div)
 
 })
 
 }
-
-
 
 </script>
 
